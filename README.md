@@ -4,7 +4,7 @@ I received the B.E. degree from Huazhong University of Science and Technology in
 
 Homepage: https://smallflyingpig.github.io
 
-Email: jgli AT pku.edu.cn / jiguo.li AT vipl.ict.ac.cn
+Email: jgli AT fudan.edu.cn / jiguo.li AT vipl.ict.ac.cn / jiguo_li@qq.com
 
 
 This homepage is forked and edited from https://github.com/liu-xb/liu-xb.github.io, and also welcome to fork the source code of my homepage.
