@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hello World - 我的博客系统搭建 - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">Hello World - 我的博客系统搭建</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2024-04-23</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">博客</span> <span class="tag-item">Web</span> <span class="tag-item">Python</span></div>
+        </header>
+        <div class="blog-detail-body"><h2>欢迎</h2>
+<p>这是我的第一篇技术博客。本文介绍如何搭建一个简单的静态博客系统。</p>
+<h2>技术方案</h2>
+<p>博客系统采用以下技术：</p>
+<ul>
+<li><strong>Markdown</strong> 格式写作</li>
+<li><strong>Python</strong> 构建脚本转换 HTML</li>
+<li><strong>纯静态</strong> HTML，无需数据库</li>
+<li><strong>前端 JS</strong> 实现筛选功能</li>
+</ul>
+<h2>目录结构</h2>
+<pre><code>_posts/           # Markdown 源文件
+blog/
+  index.html      # 博客列表页
+  posts/          # 生成的 HTML 文件
+</code></pre>
+<h2>构建流程</h2>
+<p>运行 <code>python build_blog.py</code> 即可自动生成所有博客页面。</p>
+<h3>代码示例</h3>
+<pre><code class="language-python">def build_blog():
+    for md_file in POSTS_DIR.glob('*.md'):
+        content = md_file.read_text()
+        metadata, body = parse_frontmatter(content)
+        html = generate_post_html(metadata, body)
+        output_file.write_text(html)
+</code></pre>
+<h2>总结</h2>
+<p>这是一个简单、可扩展的博客方案。后续可以添加更多功能：</p>
+<ol>
+<li>评论系统</li>
+<li>RSS 订阅</li>
+<li>搜索功能</li>
+</ol>
+<p>Stay tuned!</p></div>
+        <a href="../index.html" class="blog-back">← Back to Blog</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

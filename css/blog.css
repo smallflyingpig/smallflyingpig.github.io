@@ -1,0 +1,39 @@
+/* Blog styles - matching main layout */
+
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; }
+.filter-tag { display: inline-block; padding: 4px 8px; background: #f5f5f5; border-radius: 3px; font-size: 12px; cursor: pointer; }
+.filter-tag:hover, .filter-tag.active { background: var(--accent); color: white; }
+
+.blog-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+.blog-card { background: var(--card-bg); padding: 15px; border-radius: 5px; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+.blog-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+
+.blog-card-title { font-family: 'Playfair Display', serif; font-size: 17px; margin-bottom: 8px; }
+.blog-card-meta { display: flex; gap: 10px; margin-bottom: 6px; font-size: 12px; }
+.blog-card-date { color: #888; }
+.blog-card-cat { padding: 2px 5px; border-radius: 3px; font-size: 10px; color: white; }
+.blog-card-cat.tech { background: #3498db; }
+.blog-card-cat.essay { background: #9b59b6; }
+.blog-card-cat.other { background: #7f8c8d; }
+
+.blog-card-tags { display: flex; gap: 5px; margin-bottom: 6px; }
+.blog-card-tags .tag-item { padding: 2px 5px; background: #f0f0f0; border-radius: 3px; font-size: 11px; }
+.blog-card-excerpt { font-size: 13px; color: #666; line-height: 1.4; }
+
+/* Blog detail */
+.blog-detail-content { max-width: 650px; }
+.blog-detail-header { margin-bottom: 20px; }
+.blog-detail-title { font-family: 'Playfair Display', serif; font-size: 28px; }
+
+.blog-detail-body { font-size: 15px; line-height: 1.7; }
+.blog-detail-body h2 { font-size: 22px; margin: 20px 0 10px; }
+.blog-detail-body h3 { font-size: 18px; margin: 15px 0 8px; }
+.blog-detail-body p { margin-bottom: 10px; }
+.blog-detail-body code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; }
+.blog-detail-body pre { background: #2d2d2d; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto; margin: 10px 0; }
+.blog-detail-body pre code { background: none; }
+.blog-detail-body img { max-width: 100%; border-radius: 5px; margin: 10px auto; display: block; }
+.blog-detail-body blockquote { border-left: 2px solid var(--accent); padding-left: 10px; color: #666; margin: 10px 0; }
+
+.blog-back { display: inline-block; margin-top: 20px; padding: 6px 12px; background: var(--accent); color: white; border-radius: 4px; font-size: 13px; }
+.blog-back:hover { text-decoration: none; transform: translateY(-1px); }
