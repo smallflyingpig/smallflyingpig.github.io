@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code 预训练数据优化：最新进展与关键文献 - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">Code 预训练数据优化：最新进展与关键文献</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h2 id="-">---|-------|------|----------|------|----------|---------| ...</h2>
+<h1 id="code">Code 预训练数据优化：最新进展与关键文献</h1>
+<blockquote>
+<p>调研时间：2026-04，聚焦 pretrain 阶段的 code 数据优化，涵盖数据管线、混合比例、repo 级长文组织、去重与质量过滤、Scaling Laws 等。</p>
+</blockquote>
+<hr />
+<h2 id="code_1">一、业界 Code 模型全景（技术报告速览）</h2>
+<p>做 code 预训练，先了解头部模型的训练方案是最高效的入门方式：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>arXiv</th>
+<th>时间</th>
+<th>总 Tokens</th>
+<th>架构</th>
+<th>Code 占比</th>
+<th>核心特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>StarCoder 2</strong></td>
+<td><a href="https://arxiv.org/abs/2402.19173">2402.19173</a></td>
+<td>2024.02</td>
+<td>4.3T</td>
+<td>Dense 3B/7B/15B</td>
+<td>~100%</td>
+<td>从零训练，纯 code，The Stack v2 数据集</td>
+</tr>
+<tr>
+<td><strong>DeepSeek-Coder-V2</strong></td>
+<td><a href="https://arxiv.org/abs/2405.04448">2405.04448</a></td>
+<td>2024.05</td>
+<td>6T</td>
+<td>MoE 236B/21B active</td>
+<td>87% code + 13% math</td>
+<td>从零训练，repo 级，338 语言，无 general text</td>
+</tr>
+<tr>
+<td><strong>OpenCoder</strong></td>
+<td><a href="https://arxiv.org/abs/2411.06485">2411.06485</a></td>
+<td>2024.11</td>
+<td>-</td>
+<td>Dense 1.5B/8B</td>
+<td>-</td>
+<td><strong>完全可复现的开源 cookbook</strong>，8B 打平 CodeLlama-70B</td>
+</tr>
+<tr>
+<td><strong>Qwen2.5-Coder</strong></td>
+<td><a href="https://arxiv.org/abs/2412.14586">2412.14586</a></td>
+<td>2024.12</td>
+<td>5.5T</td>
+<td>Dense 0.5B-32B</td>
+<td>50→65→75%（渐进）</td>
+<td>继续 pretrain 自 Qwen2.5，三阶段课程学习</td>
+</tr>
+<tr>
+<td><strong>MiniMax-01</strong></td>
+<td><a href="https://arxiv.org/abs/2503.21404">2503.21404</a></td>
+<td>2025.03</td>
+<td>~4.5T</td>
+<td>MoE 456B/45.6B active</td>
+<td>未公开</td>
+<td>混合注意力（线性+softmax），400 万 context</td>
+</tr>
+<tr>
+<td><strong>CodeGeeX4</strong> (GLM)</td>
+<td><a href="https://arxiv.org/abs/2505.17448">2505.17448</a></td>
+<td>2025.05</td>
+<td>9.8T</td>
+<td>Dense 9B</td>
+<td>~63% code</td>
+<td>统一预训练 code+math+text，从零训练</td>
+</tr>
+<tr>
+<td><strong>Llama 4 Maverick</strong></td>
+<td><a href="https://arxiv.org/abs/2601.11659">2601.11659</a></td>
+<td>2025.01</td>
+<td>~25T</td>
+<td>MoE 400B/17B active</td>
+<td>~45%</td>
+<td>Code 成最大类别，分阶段课程学习</td>
+</tr>
+<tr>
+<td><strong>Kimi K2</strong></td>
+<td><a href="https://arxiv.org/abs/2507.02847">2507.02847</a></td>
+<td>2025.07</td>
+<td>15.7T</td>
+<td>MoE 1T/32B active</td>
+<td>显著（未公开）</td>
+<td>通用 MoE，大量合成数据，agent 能力强</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_1">各模型数据混合策略对比</h3>
+<pre><code>StarCoder 2:     ████████████████████████████████████████ 100% code
+DeepSeek-Coder-V2: ████████████████████████████████████████████████ 87% code + 13% math
+CodeGeeX4 (GLM): ████████████████████████████████████████████ 63% code + 21% math + 16% text
+Qwen2.5-Coder:    ████████████████████████████████████████████ 50→75% code（渐进）+ math + text
+Llama 4 Maverick: ████████████████████████████████████████████████████████████ ~45% code + 55% 其他
+Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未公开）
+</code></pre>
+<h3 id="_2">关键观察</h3>
+<ol>
+<li><strong>两种流派</strong>：</li>
+<li><strong>纯 code 派</strong>（StarCoder2, DeepSeek-Coder-V2）：从零训练，纯 code（+math），code 能力上限高但通用性弱</li>
+<li>
+<p><strong>混合派</strong>（Qwen, CodeGeeX4, Llama 4, Kimi K2）：code + math + general text 混合，通用性和 code 能力兼顾</p>
+</li>
+<li>
+<p><strong>课程学习是共识</strong>：几乎所有模型都在训练过程中调整 data mix，而非固定比例</p>
+</li>
+<li>Qwen2.5-Coder 三阶段：50% → 65% → 75% code</li>
+<li>Llama 4：训练后期提高 code 比例</li>
+<li>
+<p>这是 2024-2025 的标准做法</p>
+</li>
+<li>
+<p><strong>OpenCoder 是最佳入门参考</strong>：完全开源的训练 pipeline、数据、中间 checkpoint，8B 模型打平 70B 级模型</p>
+</li>
+</ol>
+<hr />
+<h2 id="_3">二、核心数据集（原材料）</h2>
+<table>
+<thead>
+<tr>
+<th>数据集</th>
+<th>规模</th>
+<th>来源</th>
+<th>亮点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>The Stack v2</strong> (BigCode)</td>
+<td>~6.4T tokens, 600+ 语言</td>
+<td>GitHub 按许可证过滤</td>
+<td>2024-2025 code 预训练事实标准</td>
+</tr>
+<tr>
+<td><strong>Dolma-v2</strong> (Ai2)</td>
+<td>数T tokens, 含 code 子集</td>
+<td>Web + GitHub + StackOverflow</td>
+<td>完全开源，OLMo/Tülu 家族基座</td>
+</tr>
+<tr>
+<td><strong>FineWeb-Edu v1.1</strong> (HF)</td>
+<td>~1.3T tokens</td>
+<td>CommonCrawl 教育质量过滤</td>
+<td>教育解释类文本提升 code reasoning</td>
+</tr>
+<tr>
+<td><strong>RedPajama-V2</strong> (Together)</td>
+<td>30T+ tokens</td>
+<td>84 个 CommonCrawl dump</td>
+<td>含 code 子集，per-document 质量标注</td>
+</tr>
+<tr>
+<td><strong>Cosmopedia-v2</strong> (Ai2)</td>
+<td>合成数据</td>
+<td>LLM 生成</td>
+<td>含合成 code 数据</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_4">三、代码预训练数据管线关键环节</h2>
+<h3 id="31-deduplication">3.1 去重 (Deduplication)</h3>
+<p>业界共识从「能去就去」转向<strong>结构感知的精准去重</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>代表</th>
+<th>优势</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>精确匹配 + MinHash-LSH</td>
+<td>StarCoder2, DeepSeek-Coder-V2</td>
+<td>标准做法，成熟</td>
+<td>无法识别语义相似但文本不同的代码</td>
+</tr>
+<tr>
+<td>语义级去重</td>
+<td>CodeBERT/UniXcoder embedding</td>
+<td>比文本匹配更精准</td>
+<td>计算成本高</td>
+</tr>
+<tr>
+<td>结构感知去重</td>
+<td>保留功能不同但文本相似的变体</td>
+<td>不丢失有价值模式</td>
+<td>实现复杂</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现（2025 共识）：</strong> 过度去重会移除有价值的长尾代码模式，降低模型在 edge case 上的表现。推荐<strong>轻度去重 + 结构保留</strong>策略。</p>
+<h3 id="32-quality-filtering">3.2 质量过滤 (Quality Filtering)</h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>方法</th>
+<th>评价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规则+启发式</td>
+<td>文件大小、字符比率、AST 解析成功率</td>
+<td>基础且有效</td>
+</tr>
+<tr>
+<td>学习型评分</td>
+<td>fastText 分类器、LLM-as-judge、perplexity-based</td>
+<td>更精细但有计算成本</td>
+</tr>
+<tr>
+<td>复合评分</td>
+<td>规则 + perplexity + AST 组合</td>
+<td>单一过滤器不如组合</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2025 核心反转：</strong> 多篇论文发现「最小过滤（只删明显损坏文件）」在某些场景下比「重度过滤」效果更好，取决于总数据量。<strong>宁可多留，不要过度清洗。</strong></p>
+<h3 id="33-data-mixing">3.3 数据混合比例 (Data Mixing)</h3>
+<h4 id="qwen25-coder">Qwen2.5-Coder 的三阶段课程学习（详细参考）</h4>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>Tokens</th>
+<th>Code</th>
+<th>Math</th>
+<th>General Text</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stage 1</td>
+<td>前 2T</td>
+<td>~50%</td>
+<td>~25%</td>
+<td>~25%</td>
+</tr>
+<tr>
+<td>Stage 2</td>
+<td>中 2T</td>
+<td>~65%</td>
+<td>~15%</td>
+<td>~20%</td>
+</tr>
+<tr>
+<td>Stage 3</td>
+<td>后 1.5T</td>
+<td>~75%</td>
+<td>~10%</td>
+<td>~15%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>580+ 编程语言，Python ~25%, JavaScript ~15%, Java ~12%, C/C++ ~10%</li>
+<li>继续 pretrain 自 Qwen2.5 base（非从零训练）</li>
+</ul>
+<h4 id="llama-4">Llama 4 的分阶段课程学习</h4>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>总 Tokens</th>
+<th>Code 占比</th>
+<th>对比前代</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Llama 3.1</td>
+<td>~15T</td>
+<td>~20%</td>
+<td>基线</td>
+</tr>
+<tr>
+<td>Llama 4 Scout</td>
+<td>~10T</td>
+<td>~35%</td>
+<td>+15pp</td>
+</tr>
+<tr>
+<td>Llama 4 Maverick</td>
+<td>~25T</td>
+<td>~45%（后期更高）</td>
+<td>Code 成为最大类别</td>
+</tr>
+</tbody>
+</table>
+<p><strong>参考来源：</strong><br />
+- Llama 4 技术报告: <a href="https://arxiv.org/abs/2601.11659">arXiv 2601.11659</a>（注：已被 Meta 撤回）<br />
+- <a href="https://sebastianraschka.com/blog/">Sebastian Raschka 博客</a> — LLM 训练细节分析的最佳独立来源</p>
+<h3 id="34-decontamination">3.4 污染审计 (Decontamination)</h3>
+<blockquote>
+<p>这是任何 code 预训练的<strong>必修课</strong>，必须在去重/过滤之后单独做。</p>
+</blockquote>
+<ul>
+<li>超过 60% 的主流 code benchmark（HumanEval, MBPP 等）在主要 code 语料库中存在显著污染</li>
+<li>必须在去重/过滤<strong>之后</strong>单独做 benchmark leakage 检测</li>
+<li>参考论文：<em>Contamination in Code LLM Benchmarks: A Systematic Audit</em> (2025)</li>
+</ul>
+<hr />
+<h2 id="repo-midtrain">四、Repo 级别与长文预训练（Midtrain）</h2>
+<h3 id="41-repo">4.1 Repo 级别上下文</h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>总 Tokens</th>
+<th>Repo 级特性</th>
+<th>亮点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DeepSeek-Coder-V2</td>
+<td>6T</td>
+<td>强 repo 级结构保留</td>
+<td>MoE, 21B active / 236B total, 128K context</td>
+</tr>
+<tr>
+<td>Qwen2.5-Coder</td>
+<td>5.5T+</td>
+<td>repo 级结构化数据</td>
+<td>融合 reasoning/math，长文能力强</td>
+</tr>
+<tr>
+<td>StarCoder2</td>
+<td>4.3T</td>
+<td>部分 repo 结构</td>
+<td>开源标杆，多机构协作</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-midtrain">4.2 长上下文扩展（Midtrain 阶段）</h3>
+<p>当前主流做法是在 midtrain 阶段做 <strong>progressive context extension</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>核心思路</th>
+<th>支持长度</th>
+<th>代表</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NTK-aware RoPE scaling</td>
+<td>修改 RoPE base frequency</td>
+<td>32K-128K</td>
+<td>大多数模型</td>
+</tr>
+<tr>
+<td>YaRN</td>
+<td>NTK + attention temperature 调整</td>
+<td>128K</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Progressive Extension</td>
+<td>多阶段逐步增长 context length</td>
+<td>256K</td>
+<td>当前最佳实践</td>
+</tr>
+<tr>
+<td>ReRoPE</td>
+<td>回溯式 RoPE</td>
+<td>128K</td>
+<td>新方法</td>
+</tr>
+<tr>
+<td>FluidRoPE</td>
+<td>自适应 base frequency</td>
+<td>4K-200K</td>
+<td>自适应方案</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最佳实践：</strong><br />
+1. <strong>Midtrain 阶段</strong>（而非 post-training）是做 context extension 的首选<br />
+2. <strong>Progressive/incremental scaling</strong> 比一次性扩展更稳定<br />
+3. 用 <strong>repo 级别的真实代码</strong>（跨文件依赖）作为长文训练数据，而非 padding<br />
+4. 参考 CodeLongBench 做长文能力评测</p>
+<hr />
+<h2 id="scaling-laws">五、Scaling Laws 与训练阶段交互（重要新方向）</h2>
+<h3 id="51-code-scaling-laws">5.1 Code 专用 Scaling Laws</h3>
+<p>Code 模型的 scaling law 与 NLP 模型有显著差异：</p>
+<table>
+<thead>
+<tr>
+<th>发现</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Diminishing returns 更早出现</td>
+<td>同样算力下，code 模型比 NLP 模型更早触及瓶颈</td>
+</tr>
+<tr>
+<td><strong>质量 &gt; 数量</strong></td>
+<td>500B 精选 tokens 可匹敌 2T+ 未经筛选的 tokens</td>
+</tr>
+<tr>
+<td>最优 data mix 随模型规模变化</td>
+<td>大模型需要更多 code，小模型需要更多 general text</td>
+</tr>
+<tr>
+<td>合成 code 数据有安全上限</td>
+<td>~15% 比例，超过引入分布偏移</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-scaling-law">5.2 编程语言多样性的 Scaling Law</h3>
+<p><strong>必读：</strong> <em>Scaling Laws for Code: Every Programming Language Matters</em> (<a href="https://arxiv.org/abs/2506.16327">2506.16327</a>, 中国人民大学, 2025.06)</p>
+<p>核心发现：<br />
+- <strong>多语言预训练始终优于单语言预训练</strong><br />
+- 新增语言的收益呈<strong>对数递减</strong><br />
+- <strong>语言相似性</strong>是关键因素 — 添加相似语言（如 Java+Kotlin）的收益高于添加不相关语言<br />
+- 对制定 code data mixing 策略有直接指导意义</p>
+<h3 id="53-pre-trainingmid-trainingrl">5.3 Pre-training、Mid-training、RL 的交互</h3>
+<p><strong>必读：</strong> <em>On the Interplay of Pre-Training, Mid-Training, and RL on Reasoning Language Models</em> (<a href="https://arxiv.org/abs/2507.14320">2507.14320</a>, 浙大 &amp; 阿里巴巴, 2025.07)</p>
+<p>核心发现：<br />
+- 三个训练阶段（pre-training → mid-training/SFT → RL）的<strong>数据质量与组成</strong>显著影响最终推理能力<br />
+- Mid-training 阶段的 reasoning data 质量比数量更重要<br />
+- RL 可以弥补 pre-training 的不足，但<strong>无法完全替代</strong>高质量的 pre-training 数据<br />
+- 对设计 code+reasoning 模型的训练 pipeline 有直接参考价值</p>
+<h3 id="54-scaling-agent">5.4 通过持续预训练 Scaling Agent</h3>
+<p><strong>必读：</strong> <em>Scaling Agents via Continual Pre-training</em> (<a href="https://arxiv.org/abs/2506.03318">2506.03318</a>, 清华 &amp; 微软, 2025.06)</p>
+<p>核心发现：<br />
+- 提出 <strong>AgentCPT</strong> 框架，在 base LM 上持续预训练大规模 agent 轨迹数据<br />
+- 在 WebArena、SWE-bench Verified、TAU-bench 上达到开源 SOTA<br />
+- <strong>数据量和计算量的 scaling 都可预测</strong><br />
+- 对 code agent 能力的训练有直接参考价值</p>
+<hr />
+<h2 id="code_2">六、Code 新范式探索</h2>
+<h3 id="61-code-world-models">6.1 Code World Models（代码世界模型）</h3>
+<p><strong>必读：</strong> <em>CWM: An Open-Weights LLM for Research on Code Generation with World Models</em> (<a href="https://arxiv.org/abs/2506.04566">2506.04566</a>, Google DeepMind, 2025.06)</p>
+<p>核心思路：<br />
+- 训练 LLM <strong>模拟代码执行</strong>，生成 Python 程序的逐 token 执行轨迹<br />
+- 在 CRUXEval、MBPP-Exec、HumanEval-Exec 上达到 SOTA<br />
+- 超越远大于自己的模型<br />
+- 代表了 code 模型的新方向：从「生成代码」到「理解代码执行过程」</p>
+<h3 id="62-project">6.2 Project 级代码补全的预训练</h3>
+<p><strong>必读：</strong> <em>On Pretraining for Project-Level Code Completion</em> (<a href="https://arxiv.org/abs/2504.02220">2504.02220</a>, 南京大学, 2025.04)</p>
+<p>核心思路：<br />
+- 提出 <strong>RepoCoder-2.0</strong>，聚焦 project 级跨文件代码补全的预训练方法论<br />
+- 研究如何在预训练阶段有效组织跨文件上下文<br />
+- 对 repo 级 code 模型的数据组织有直接指导意义</p>
+<hr />
+<h2 id="_5">七、必读论文清单</h2>
+<h3 id="tier-1-code">Tier 1：必读（做 code 预训练前必须了解）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>论文</th>
+<th>链接</th>
+<th>核心价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>StarCoder2</strong> (BigCode)</td>
+<td><a href="https://arxiv.org/abs/2402.19173">2402.19173</a></td>
+<td>The Stack v2 数据管线全流程，事实标准</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>DeepSeek-Coder-V2</strong></td>
+<td><a href="https://arxiv.org/abs/2405.04448">2405.04448</a></td>
+<td>6T tokens, repo 级结构, MoE + code 预训练范式</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>OpenCoder</strong></td>
+<td><a href="https://arxiv.org/abs/2411.06485">2411.06485</a></td>
+<td>完全可复现的开源 cookbook，8B 打平 70B</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Qwen2.5-Coder</strong> 技术报告</td>
+<td><a href="https://arxiv.org/abs/2412.14586">2412.14586</a></td>
+<td>三阶段课程学习，code+math+text 融合</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>The Llama 4 Herd</strong> (Meta)</td>
+<td><a href="https://arxiv.org/abs/2601.11659">2601.11659</a></td>
+<td>Code 45% 混合比例, 分阶段课程学习（已撤回）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tier-2">Tier 2：重要（最新进展 &amp; 训练策略）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>论文</th>
+<th>链接</th>
+<th>核心价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6</td>
+<td><strong>CodeGeeX4</strong> (GLM/智谱)</td>
+<td><a href="https://arxiv.org/abs/2505.17448">2505.17448</a></td>
+<td>统一预训练 code+math+text，9B 达 SOTA</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Kimi K2</strong> (Moonshot)</td>
+<td><a href="https://arxiv.org/abs/2507.02847">2507.02847</a></td>
+<td>1T MoE, 合成数据驱动, agent 能力</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Scaling Laws for Code: Every Programming Language Matters</strong></td>
+<td><a href="https://arxiv.org/abs/2506.16327">2506.16327</a></td>
+<td>编程语言多样性 scaling law，多语言 vs 单语言</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>On the Interplay of Pre-Training, Mid-Training, and RL</strong></td>
+<td><a href="https://arxiv.org/abs/2507.14320">2507.14320</a></td>
+<td>三阶段训练交互，数据质量 &gt; 数量</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Scaling Agents via Continual Pre-training</strong></td>
+<td><a href="https://arxiv.org/abs/2506.03318">2506.03318</a></td>
+<td>AgentCPT 框架，持续预训练 scaling agent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tier-3">Tier 3：前沿探索（新方向）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>论文</th>
+<th>链接</th>
+<th>核心价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11</td>
+<td><strong>CWM: Code World Models</strong> (DeepMind)</td>
+<td><a href="https://arxiv.org/abs/2506.04566">2506.04566</a></td>
+<td>代码执行模拟，新范式</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>On Pretraining for Project-Level Code Completion</strong> (NJU)</td>
+<td><a href="https://arxiv.org/abs/2504.02220">2504.02220</a></td>
+<td>Repo 级跨文件补全预训练</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>MiniMax-01</strong></td>
+<td><a href="https://arxiv.org/abs/2503.21404">2503.21404</a></td>
+<td>混合注意力，400 万 context</td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>CodeMixer: Data Mixing Strategies</strong></td>
+<td>-</td>
+<td>系统 data mixing 策略研究</td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>Contamination in Code LLM Benchmarks: A Systematic Audit</strong></td>
+<td>-</td>
+<td>Benchmark 污染审计</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tier-4-survey">Tier 4：背景 Survey</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>论文</th>
+<th>核心价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td><strong>A Survey on Data Selection for Language Models</strong> (2025)</td>
+<td>数据选择全景</td>
+</tr>
+<tr>
+<td>17</td>
+<td><strong>Code LLMs: A Comprehensive Survey</strong> (2025)</td>
+<td>Code LLM 全生命周期 survey</td>
+</tr>
+<tr>
+<td>18</td>
+<td><strong>Data Curation for LLMs: A Comprehensive Survey</strong> (2025)</td>
+<td>数据优化综合 survey，含 code case study</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">八、实操建议</h2>
+<h3 id="_7">数据管线</h3>
+<ol>
+<li><strong>先读 OpenCoder + Qwen2.5-Coder</strong> — OpenCoder 给完全可复现的 pipeline，Qwen 给三阶段课程学习细节</li>
+<li><strong>Decontamination 是第一步不是最后一步</strong> — 先排除 benchmark leakage 再谈优化</li>
+<li><strong>从「轻度过滤」开始</strong>，不要一上来就重度清洗 — 2025 年的共识是宁可多留</li>
+<li><strong>分阶段课程学习</strong>：训练后期提高 code 比例，这是业界标准做法</li>
+</ol>
+<h3 id="repo">Repo 级 &amp; 长文</h3>
+<ol>
+<li><strong>Repo 级别的数据组织</strong>是 code 模型的核心竞争力，参考 <em>On Pretraining for Project-Level Code Completion</em></li>
+<li><strong>Midtrain 阶段做 progressive context extension</strong>，用真实 repo 代码而非 padding</li>
+</ol>
+<h3 id="scaling">Scaling &amp; 新方向</h3>
+<ol>
+<li>关注 <strong>code 专用 scaling law</strong>（<em>Every Programming Language Matters</em>），不要直接套用 Chinchilla</li>
+<li>读 <em>Interplay of Pre-Training, Mid-Training, and RL</em> 理解训练阶段间的交互</li>
+<li>关注 <strong>CWM 世界模型</strong>方向 — 从生成代码到理解执行</li>
+</ol>
+<h3 id="_8">路线图建议</h3>
+<pre><code>入门（1-2 天）: StarCoder2 → OpenCoder（建立 pipeline 直觉）
+核心（3-5 天）: Qwen2.5-Coder → DeepSeek-Coder-V2 → CodeGeeX4（掌握课程学习 + 混合策略）
+进阶（1 周）  : Every Programming Language Matters → Interplay 论文 → AgentCPT（理解 scaling + 阶段交互）
+前沿          : CWM → Project-Level Pretraining（探索新方向）
+</code></pre>
+<hr />
+<h2 id="_9">参考资料</h2>
+<h3 id="_10">技术报告</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2402.19173">StarCoder2</a> | <a href="https://arxiv.org/abs/2405.04448">DeepSeek-Coder-V2</a> | <a href="https://arxiv.org/abs/2411.06485">OpenCoder</a></li>
+<li><a href="https://arxiv.org/abs/2412.14586">Qwen2.5-Coder</a> | <a href="https://arxiv.org/abs/2505.17448">CodeGeeX4</a> | <a href="https://arxiv.org/abs/2601.11659">Llama 4</a></li>
+<li><a href="https://arxiv.org/abs/2507.02847">Kimi K2</a> | <a href="https://arxiv.org/abs/2503.21404">MiniMax-01</a></li>
+</ul>
+<h3 id="_11">关键研究论文</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2506.16327">Scaling Laws for Code: Every Programming Language Matters</a></li>
+<li><a href="https://arxiv.org/abs/2507.14320">On the Interplay of Pre-Training, Mid-Training, and RL</a></li>
+<li><a href="https://arxiv.org/abs/2506.03318">Scaling Agents via Continual Pre-training</a></li>
+<li><a href="https://arxiv.org/abs/2506.04566">CWM: Code World Models</a></li>
+<li><a href="https://arxiv.org/abs/2504.02220">On Pretraining for Project-Level Code Completion</a></li>
+</ul>
+<h3 id="_12">数据集</h3>
+<ul>
+<li><a href="https://huggingface.co/bigcode/starcoder2">The Stack v2 &amp; StarCoder2</a> | <a href="https://github.com/allenai/dolma">Dolma</a></li>
+<li><a href="https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu">FineWeb-Edu</a> | <a href="https://github.com/bigcode-project">BigCode Project</a></li>
+</ul>
+<h3 id="_13">分析博客</h3>
+<ul>
+<li><a href="https://sebastianraschka.com/blog/">Sebastian Raschka 博客</a> — LLM 训练细节分析的最佳独立来源</li>
+</ul></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

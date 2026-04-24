@@ -54,35 +54,86 @@
 </div>
 
 <script>
-let posts=[],cat='all',tag=null,year=null;
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
-async function load(){try{posts=await(await fetch('index.json')).json();render();}catch(e){document.getElementById('noResults').style.display='block';}}
+let posts=[], cat='all', tag=null, year=null;
 
-function render(){
-  const tags={},years={};
-  posts.forEach(p=>{p.tags.forEach(t=>tags[t]=(tags[t]||0)+1);years[p.date.split('-')[0]=(years[p.date.split('-'][0]]||0)+1});
-  document.getElementById('tagFilter').innerHTML=Object.entries(tags).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`<span class="filter-tag${tag===t?' active':''}" data-tag="${t}">${t}(${c})</span>`).join('');
-  document.getElementById('yearFilter').innerHTML=Object.entries(years).sort((a,b)=>b[0]-a[0]).map(([y,c])=>`<li><a href="#"${year===y?' class="active"':''} data-year="${y}">${y}(${c})</a></li>`).join('');
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+async function load() {
+  try {
+    const resp = await fetch('index.json');
+    posts = await resp.json();
+    render();
+  } catch(e) {
+    document.getElementById('noResults').style.display = 'block';
+    console.error('Failed to load posts:', e);
+  }
+}
+
+function render() {
+  const tags = {};
+  const years = {};
   
-  let f=posts;
-  if(cat!=='all')f=f.filter(p=>p.category===cat);
-  if(tag)f=f.filter(p=>p.tags.includes(tag));
-  if(year)f=f.filter(p=>p.date.startsWith(year));
+  posts.forEach(p => {
+    p.tags.forEach(t => tags[t] = (tags[t] || 0) + 1);
+    const y = p.date.split('-')[0];
+    years[y] = (years[y] || 0) + 1;
+  });
   
-  document.getElementById('blogGrid').innerHTML=f.map(p=>`
+  document.getElementById('tagFilter').innerHTML = Object.entries(tags)
+    .sort((a,b) => b[1] - a[1])
+    .map(([t,c]) => `<span class="filter-tag${tag===t?' active':''}" data-tag="${t}">${t}(${c})</span>`)
+    .join('');
+  
+  document.getElementById('yearFilter').innerHTML = Object.entries(years)
+    .sort((a,b) => b[0] - a[0])
+    .map(([y,c]) => `<li><a href="#"${year===y?' class="active"':''} data-year="${y}">${y}(${c})</a></li>`)
+    .join('');
+  
+  let filtered = posts;
+  if (cat !== 'all') filtered = filtered.filter(p => p.category === cat);
+  if (tag) filtered = filtered.filter(p => p.tags.includes(tag));
+  if (year) filtered = filtered.filter(p => p.date.startsWith(year));
+  
+  document.getElementById('blogGrid').innerHTML = filtered.map(p => `
     <div class="blog-card" onclick="location.href='posts/${p.slug}.html'">
       <h3 class="blog-card-title">${p.title}</h3>
-      <div class="blog-card-meta"><span class="blog-card-date">${p.date}</span><span class="blog-card-cat ${p.category}">${p.category}</span></div>
-      <div class="blog-card-tags">${p.tags.map(t=>`<span class="tag-item">${t}</span>`).join('')}</div>
+      <div class="blog-card-meta">
+        <span class="blog-card-date">${p.date}</span>
+        <span class="blog-card-cat ${p.category}">${p.category}</span>
+      </div>
+      <div class="blog-card-tags">${p.tags.map(t => `<span class="tag-item">${t}</span>`).join('')}</div>
       <p class="blog-card-excerpt">${p.excerpt}</p>
     </div>
   `).join('');
-  document.getElementById('noResults').style.display=f.length?'none':'block';
+  
+  document.getElementById('noResults').style.display = filtered.length ? 'none' : 'block';
 }
 
-document.getElementById('catFilter').onclick=e=>{if(e.target.dataset.cat){cat=e.target.dataset.cat;document.querySelectorAll('#catFilter a').forEach(a=>a.classList.remove('active'));e.target.classList.add('active');render();}};
-document.getElementById('tagFilter').onclick=e=>{if(e.target.dataset.tag){tag=tag===e.target.dataset.tag?null:e.target.dataset.tag;render();}};
-document.getElementById('yearFilter').onclick=e=>{if(e.target.dataset.year){year=year===e.target.dataset.year?null:e.target.dataset.year;render();}};
+document.getElementById('catFilter').addEventListener('click', e => {
+  if (e.target.dataset.cat) {
+    cat = e.target.dataset.cat;
+    document.querySelectorAll('#catFilter a').forEach(a => a.classList.remove('active'));
+    e.target.classList.add('active');
+    render();
+  }
+});
+
+document.getElementById('tagFilter').addEventListener('click', e => {
+  if (e.target.dataset.tag) {
+    tag = tag === e.target.dataset.tag ? null : e.target.dataset.tag;
+    render();
+  }
+});
+
+document.getElementById('yearFilter').addEventListener('click', e => {
+  if (e.target.dataset.year) {
+    year = year === e.target.dataset.year ? null : e.target.dataset.year;
+    render();
+  }
+});
+
 load();
 </script>
 

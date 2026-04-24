@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-03-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h1 id="terminalbench-a-benchmark-for-end-to-end-evaluation-of-llm-agents-on-terminal-tasks">TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>标题</strong>: TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS</li>
+<li><strong>作者</strong>: 多个机构合作（Berkeley AI Research, CMU, Stanford 等）</li>
+<li><strong>机构</strong>: UC Berkeley, CMU, Stanford, 等多家机构</li>
+<li><strong>发表时间</strong>: 2026</li>
+<li><strong>论文链接</strong>: 本地PDF</li>
+</ul>
+<h2 id="_2">一、研究背景与动机</h2>
+<h3 id="_3">背景</h3>
+<p>随着大语言模型（LLM）能力不断提升，越来越多的研究关注如何让 LLM 作为智能体（Agent）与真实环境交互。终端（Terminal）是开发者最常用的工具之一，LLM 若能熟练操作终端，将极大提升开发效率。</p>
+<h3 id="_4">动机</h3>
+<p>当前 LLM Agent 评估存在以下问题：<br />
+1. <strong>缺乏真实终端环境评估</strong> - 现有基准大多在简化环境中测试，无法反映真实终端操作的复杂性<br />
+2. <strong>评估维度单一</strong> - 多数基准只关注最终结果，忽略了操作过程的质量<br />
+3. <strong>缺乏端到端评估</strong> - 缺乏从理解任务到执行命令的完整流程评估</p>
+<h2 id="_5">二、核心贡献</h2>
+<ol>
+<li><strong>提出 TERMINALBENCH 基准</strong> - 首个专门用于评估 LLM Agent 终端操作能力的端到端基准</li>
+<li><strong>设计多维度评估指标</strong> - 不仅评估任务完成度，还评估操作效率、安全性等</li>
+<li><strong>构建真实终端环境</strong> - 提供真实的 Linux 终端环境进行测试</li>
+<li><strong>大规模模型对比</strong> - 对多个主流 LLM 进行系统评估，揭示当前能力的局限</li>
+</ol>
+<h2 id="_6">三、方法详解</h2>
+<h3 id="31">3.1 基准设计</h3>
+<p>TERMINALBENCH 包含多种类型的终端任务：<br />
+- <strong>文件系统操作</strong> - 创建、删除、移动、搜索文件<br />
+- <strong>代码编译与运行</strong> - 编译代码、运行程序、调试<br />
+- <strong>系统配置与管理</strong> - 环境变量、权限设置、软件安装<br />
+- <strong>网络操作</strong> - 下载文件、API 调用<br />
+- <strong>进程管理</strong> - 启动、停止、监控进程</p>
+<h3 id="32">3.2 评估框架</h3>
+<p>评估框架包含以下组件：<br />
+1. <strong>任务描述</strong> - 自然语言描述需要完成的目标<br />
+2. <strong>终端环境</strong> - 真实的 Linux 终端环境（Docker 容器）<br />
+3. <strong>评估器</strong> - 自动判断任务是否完成（检查文件、输出、状态等）</p>
+<h3 id="33">3.3 评估指标</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任务完成率</td>
+<td>是否成功完成任务目标</td>
+</tr>
+<tr>
+<td>命令效率</td>
+<td>完成任务所需的命令数量</td>
+</tr>
+<tr>
+<td>错误恢复能力</td>
+<td>遇到错误后是否能正确处理</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>是否执行了危险操作（如 rm -rf /）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_7">四、实验设计与结果</h2>
+<h3 id="_8">实验设置</h3>
+<ul>
+<li>测试多个主流 LLM（包括 GPT-4、Claude 等）</li>
+<li>在真实 Linux 终端环境中执行</li>
+<li>涵盖多种难度级别的任务</li>
+</ul>
+<h3 id="_9">主要发现</h3>
+<ol>
+<li>当前 LLM 在简单终端任务上表现较好，复杂任务仍有挑战</li>
+<li>模型在错误处理和恢复方面存在明显不足</li>
+<li>不同模型在不同任务类型上表现差异明显</li>
+</ol>
+<h2 id="_10">五、关键创新点</h2>
+<ol>
+<li><strong>端到端评估范式</strong> - 从自然语言任务描述到终端命令执行的完整流程评估</li>
+<li><strong>真实环境测试</strong> - 不依赖模拟环境，在真实终端中执行</li>
+<li><strong>多维度指标体系</strong> - 综合评估能力、效率、安全性</li>
+</ol>
+<h2 id="_11">六、局限性与未来工作</h2>
+<h3 id="_12">局限性</h3>
+<ol>
+<li>任务覆盖范围有限，未涵盖所有终端使用场景</li>
+<li>评估器可能存在误判</li>
+<li>未考虑长时间运行的任务</li>
+</ol>
+<h3 id="_13">未来方向</h3>
+<ol>
+<li>扩展任务类型和数量</li>
+<li>引入更细粒度的评估指标</li>
+<li>探索如何提升 LLM 的终端操作能力</li>
+</ol>
+<h2 id="_14">七、个人思考</h2>
+<p>{待填写：阅读后的个人思考、启发、与相关工作的联系}</p>
+<h2 id="_15">关键图表</h2>
+<blockquote>
+<p>📌 <strong>待截图</strong>：以下图表需要从 PDF 中手动截取</p>
+</blockquote>
+<h3 id="1-terminalbench">图1: TERMINALBENCH 评估框架图</h3>
+<ul>
+<li><strong>位置</strong>: 查看 PDF 中展示评估框架的图</li>
+<li><strong>描述</strong>: 展示任务输入、终端环境、评估器的整体架构</li>
+<li><strong>重要性</strong>: 理解基准的核心设计</li>
+</ul>
+<h3 id="2">图2: 各模型性能对比图</h3>
+<ul>
+<li><strong>位置</strong>: 查看 PDF 中的实验结果图表</li>
+<li><strong>描述</strong>: 不同 LLM 在各类任务上的完成率对比</li>
+<li><strong>重要性</strong>: 直观展示当前 LLM 能力差距</li>
+</ul>
+<h3 id="1">表1: 任务类型与难度分布</h3>
+<ul>
+<li><strong>位置</strong>: 查看 PDF 中的任务统计表</li>
+<li><strong>描述</strong>: 各类任务的数量和难度分布</li>
+</ul>
+<h2 id="_16">脑图结构</h2>
+<pre><code class="language-mermaid">mindmap
+  root((TERMINALBENCH))
+    研究背景
+      LLM Agent 发展
+      终端操作重要性
+      现有评估缺陷
+    核心贡献
+      端到端基准
+      多维度指标
+      真实终端环境
+      大规模模型对比
+    任务类型
+      文件系统操作
+      代码编译运行
+      系统配置管理
+      网络操作
+      进程管理
+    评估指标
+      任务完成率
+      命令效率
+      错误恢复能力
+      安全性
+    主要发现
+      简单任务较好
+      复杂任务有挑战
+      错误处理不足
+      模型差异明显
+    局限性
+      任务覆盖有限
+      评估器可能误判
+      未考虑长时任务
+</code></pre>
+<blockquote>
+<p>💡 <strong>提示</strong>：可将上述 Mermaid 代码粘贴到 <a href="https://mermaid.live/">Mermaid Live Editor</a> 查看可视化效果，或导入 XMind 等脑图工具</p>
+</blockquote>
+<h2 id="_17">相关论文</h2>
+<ul>
+<li>AgentBench: Evaluating LLMs as Agents</li>
+<li>WebArena: A Realistic Web Environment for Building Autonomous Agents</li>
+<li>OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks</li>
+<li>InterCode: Standardizing and Benchmarking Interactive Coding with Execution Feedback</li>
+</ul>
+<h2 id="_18">参考文献</h2>
+<p>{论文引用的主要参考文献}</p></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

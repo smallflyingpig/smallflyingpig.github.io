@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,47 @@
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
 <link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
 </head>
 <body>
 <nav class="top-nav">
@@ -37,9 +78,9 @@
           <div class="blog-card-meta"><span class="blog-card-date">2024-04-23</span><span class="blog-card-cat tech">tech</span></div>
           <div class="blog-card-tags"><span class="tag-item">博客</span> <span class="tag-item">Web</span> <span class="tag-item">Python</span></div>
         </header>
-        <div class="blog-detail-body"><h2>欢迎</h2>
+        <div class="blog-detail-body"><h2 id="_1">欢迎</h2>
 <p>这是我的第一篇技术博客。本文介绍如何搭建一个简单的静态博客系统。</p>
-<h2>技术方案</h2>
+<h2 id="_2">技术方案</h2>
 <p>博客系统采用以下技术：</p>
 <ul>
 <li><strong>Markdown</strong> 格式写作</li>
@@ -47,15 +88,15 @@
 <li><strong>纯静态</strong> HTML，无需数据库</li>
 <li><strong>前端 JS</strong> 实现筛选功能</li>
 </ul>
-<h2>目录结构</h2>
+<h2 id="_3">目录结构</h2>
 <pre><code>_posts/           # Markdown 源文件
 blog/
   index.html      # 博客列表页
   posts/          # 生成的 HTML 文件
 </code></pre>
-<h2>构建流程</h2>
+<h2 id="_4">构建流程</h2>
 <p>运行 <code>python build_blog.py</code> 即可自动生成所有博客页面。</p>
-<h3>代码示例</h3>
+<h3 id="_5">代码示例</h3>
 <pre><code class="language-python">def build_blog():
     for md_file in POSTS_DIR.glob('*.md'):
         content = md_file.read_text()
@@ -63,7 +104,7 @@ blog/
         html = generate_post_html(metadata, body)
         output_file.write_text(html)
 </code></pre>
-<h2>总结</h2>
+<h2 id="_6">总结</h2>
 <p>这是一个简单、可扩展的博客方案。后续可以添加更多功能：</p>
 <ol>
 <li>评论系统</li>
@@ -71,7 +112,7 @@ blog/
 <li>搜索功能</li>
 </ol>
 <p>Stay tuned!</p></div>
-        <a href="../index.html" class="blog-back">← Back to Blog</a>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
       </article>
     </main>
   </div>

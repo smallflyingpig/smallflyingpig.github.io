@@ -1,14 +1,158 @@
 [
   {
-    "title": "Hello World - \u6211\u7684\u535a\u5ba2\u7cfb\u7edf\u642d\u5efa",
+    "title": "World Model：过去、现在和未来",
+    "date": "2026-04-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "World Model（世界模型）是当前具身智能（Embodied AI）领域最受关注的技术路线之一。从 LeCun 提出 JEPA、OpenAI 用 Sora 定义\"视频生成即世界模拟器\"，到 DeepMind 用 Genie 生成可交互环境，这条路线在近三年快速演进。本文梳理 World Mod...",
+    "slug": "2026-04-World Model：过去、现在和未来"
+  },
+  {
+    "title": "大模型强化学习 PPO 与 GRPO 十问十答",
+    "date": "2026-04-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "随着 DeepSeek R1 的火爆，GRPO 算法走入了大众视野。作为 RLHF 的两大支柱，PPO（近端策略优化）与 GRPO（组相对策略优化）在架构和逻辑上有何异同？本文通过十个核心问题，带你拆解它们的底层机理。 在 `verl` 框架及大模型强化学习的标准实现中，PPO 和 GRPO 的 L...",
+    "slug": "2026-04-LLM RL PPO&GRPO 十问十答"
+  },
+  {
+    "title": "DPO LOSS公式完整解读",
+    "date": "2026-04-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "$$\\mathcal{L}_{DPO} = -\\mathbb{E}_{(x, y_w, y_l)} \\left[ \\log \\sigma \\left( \\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{ref}(y_w|x)} - \\beta \\log \\frac{\\...",
+    "slug": "2026-04-DPO LOSS公式完整解读"
+  },
+  {
+    "title": "Code 预训练数据优化：最新进展与关键文献",
+    "date": "2026-04-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "做 code 预训练，先了解头部模型的训练方案是最高效的入门方式： | 模型 | arXiv | 时间 | 总 Tokens | 架构 | Code 占比 | 核心特点 | |",
+    "slug": "2026-04-CodePretrainData-Survey"
+  },
+  {
+    "title": "Anthropic Agent 架构全景解读",
+    "date": "2026-04-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "一个裸 LLM 只能做一件事：**给定输入，生成输出**（`prompt → completion`）。 ``` 用户: \"巴黎天气如何？\" LLM:  \"巴黎今天15°C，多云转晴。\" ``` Agent 在此基础上加了三样东西： | 增量能力 | 作用 | 类比 | |",
+    "slug": "2026-04-Anthropic-Agent架构全景解读"
+  },
+  {
+    "title": "TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS",
+    "date": "2026-03-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS - **作者**: 多个机构合作（Berkeley AI Research, CMU, Stanford 等）...",
+    "slug": "2026-03-TerminalBench-Berkeley"
+  },
+  {
+    "title": "Scaling Managed Agents: Decoupling the Brain from the Hands",
+    "date": "2026-02-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: Scaling Managed Agents: Decoupling the Brain from the Hands - **作者**: Lance Martin, Gabe Cemaj, Michael Cohen - **机构**: Anthropic - **发表时间**...",
+    "slug": "2026-02-ManagedAgents-Martin-Anthropic"
+  },
+  {
+    "title": "Quantifying Infrastructure Noise in Agentic Coding Evals",
+    "date": "2026-02-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: Quantifying Infrastructure Noise in Agentic Coding Evals - **作者**: Gian Segato, Nicholas Carlini, Jeremy Hadfield, Mike Merrill, Alex Shaw -...",
+    "slug": "2026-02-InfraNoise-Segato-Anthropic"
+  },
+  {
+    "title": "Hello World - 我的博客系统搭建",
     "date": "2024-04-23",
     "category": "tech",
     "tags": [
-      "\u535a\u5ba2",
+      "博客",
       "Web",
       "Python"
     ],
-    "excerpt": "\u8fd9\u662f\u6211\u7684\u7b2c\u4e00\u7bc7\u535a\u5ba2\uff0c\u4ecb\u7ecd\u4e86\u5982\u4f55\u642d\u5efa\u4e00\u4e2a\u57fa\u4e8e Markdown \u7684\u9759\u6001\u535a\u5ba2\u7cfb\u7edf\u3002",
+    "excerpt": "这是我的第一篇博客，介绍了如何搭建一个基于 Markdown 的静态博客系统。",
     "slug": "hello-world"
+  },
+  {
+    "title": "LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models",
+    "date": "2023-09-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models - **作者**: Yukang Chen, Shengju Qian, Haotian Tang, Xin Liao, Jizhong H...",
+    "slug": "2023-09-LongLoRA-Chen-CUHK"
+  },
+  {
+    "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+    "date": "2023-05-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: Direct Preference Optimization: Your Language Model is Secretly a Reward Model - **作者**: Rafael Rafailov, Joey Hejna, Ryan Dill, Chelsea Fin...",
+    "slug": "2023-05-DPO-Rafailov-Stanford"
+  },
+  {
+    "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
+    "date": "2022-01-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models - **作者**: Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Bria...",
+    "slug": "2022-01-Chain-of-Thought-Wei-Google"
+  },
+  {
+    "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+    "date": "2021-06-01",
+    "category": "tech",
+    "tags": [
+      "LLM",
+      "AI",
+      "Papers"
+    ],
+    "excerpt": "- **标题**: LoRA: Low-Rank Adaptation of Large Language Models - **作者**: Edward Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wan...",
+    "slug": "2021-06-LoRA-Hu-Microsoft"
   }
 ]

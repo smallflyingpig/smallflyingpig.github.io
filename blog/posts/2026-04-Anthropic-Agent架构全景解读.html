@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anthropic Agent 架构全景解读 - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">Anthropic Agent 架构全景解读</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h2 id="-">-------|--...</h2>
+<h1 id="anthropic-agent">Anthropic Agent 架构全景解读</h1>
+<blockquote>
+<p>本文基于 Anthropic 官方论文 <em>Scaling Managed Agents: Decoupling the Brain from the Hands</em>（2026.02）及 Claude Agent SDK 文档，系统梳理 Agent 架构中各模块的定义、边界与协作关系。<br />
+前置要求：了解 LLM 基础概念（Token、上下文窗口、Tool Use / Function Calling），知道 ReAct 范式即可。</p>
+</blockquote>
+<hr />
+<h2 id="llm-agent">一、从 LLM 到 Agent：到底多了什么？</h2>
+<p>一个裸 LLM 只能做一件事：<strong>给定输入，生成输出</strong>（<code>prompt → completion</code>）。</p>
+<pre><code>用户: &quot;巴黎天气如何？&quot;
+LLM:  &quot;巴黎今天15°C，多云转晴。&quot;
+</code></pre>
+<p>Agent 在此基础上加了三样东西：</p>
+<table>
+<thead>
+<tr>
+<th>增量能力</th>
+<th>作用</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>工具调用（Tool Use）</strong></td>
+<td>LLM 不只是说话，还能"动手"——读写文件、执行命令、搜索网页</td>
+<td>给盲人一根手杖</td>
+</tr>
+<tr>
+<td><strong>自主循环（Agentic Loop）</strong></td>
+<td>不再一问一答，而是"思考→选工具→执行→观察→再思考"反复迭代</td>
+<td>从"问答模式"变成"项目经理模式"</td>
+</tr>
+<tr>
+<td><strong>状态管理（Session）</strong></td>
+<td>跨轮次记忆执行历史、中间结果、用户偏好</td>
+<td>从"无状态 HTTP"变成"有状态 Session"</td>
+</tr>
+</tbody>
+</table>
+<p>这三样东西不是独立拼装的，它们被<strong>Harness</strong> 统一管理。下面逐层展开。</p>
+<hr />
+<h2 id="harness">二、Harness：到底什么意思？</h2>
+<h3 id="21">2.1 一句话定义</h3>
+<p><strong>Harness 是把裸 LLM 包装成自主 Agent 的全部运行时代码。</strong></p>
+<p>它不是一个函数或一个类，而是一整套基础设施的统称。类比：HTTP 服务器不是某个函数，而是监听端口、解析请求、路由分发、返回响应的整个运行时。</p>
+<h3 id="22-anthropic">2.2 Anthropic 官方定义（来自论文）</h3>
+<p>论文中对 Harness 的精确定义：</p>
+<blockquote>
+<p><strong>Harness = 调用 Claude 并路由工具调用的循环。无状态、可重启。</strong></p>
+</blockquote>
+<p>关键属性：<br />
+- <strong>无状态</strong>：Harness 内部不保存任何需要存活的数据。所有状态外置到 Session Log。<br />
+- <strong>可重启</strong>：Harness 挂了，启动一个新的，从 Session Log 最后一个事件继续执行。<br />
+- <strong>模型无关的接口</strong>：对接口形状保持固执（opinionated），对接口背后的实现保持开放。</p>
+<h3 id="23-harness">2.3 Harness 包含哪些子模块？</h3>
+<pre><code>┌─────────────────────────── Harness ───────────────────────────────────┐
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │                  Agentic Loop（智能体循环）                      │ │
+│  │                                                                  │ │
+│  │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐  │ │
+│  │  │  Think   │ →  │  Select  │ →  │ Execute  │ →  │ Observe  │  │ │
+│  │  │  推理    │    │  选工具   │    │  执行    │    │  观察结果 │  │ │
+│  │  └──────────┘    └──────────┘    └──────────┘    └──────────┘  │ │
+│  │       ↑                                                │        │ │
+│  │       └──────────── 继续循环 / 结束 ────────────────────┘        │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                       │
+│  ┌────────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
+│  │ Tool Registry   │  │ Permission    │  │ Hooks                    │  │
+│  │ 工具注册与路由   │  │ 权限边界控制   │  │ 生命周期中间件           │  │
+│  └────────────────┘  └──────────────┘  └──────────────────────────┘  │
+│                                                                       │
+│  ┌────────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
+│  │ Context Mgmt    │  │ Subagent Mgmt │  │ Session I/O              │  │
+│  │ 上下文管理       │  │ 子 Agent 调度  │  │ 会话日志读写             │  │
+│  └────────────────┘  └──────────────┘  └──────────────────────────┘  │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────────┐│
+│  │ Memory（记忆模块）                                                 ││
+│  └──────────────────────────────────────────────────────────────────┘│
+└───────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p>逐个解释：</p>
+<h3 id="231-agentic-loop">2.3.1 Agentic Loop（智能体循环）</h3>
+<p>Harness 的心脏。每一轮（turn）的执行流程：</p>
+<pre><code>1. 将当前消息列表发送给 Claude API（POST /v1/messages）
+2. 接收响应，检查 stop_reason：
+   - &quot;end_turn&quot;     → 任务完成，退出循环
+   - &quot;tool_use&quot;     → 有工具需要调用，继续
+   - &quot;pause_turn&quot;   → 服务端工具达到迭代上限，重新发送继续
+   - &quot;max_tokens&quot;   → 输出被截断，增大 max_tokens 重试
+3. 执行工具调用，收集结果
+4. 将工具结果追加到消息列表
+5. 回到步骤 1
+</code></pre>
+<p>这不是什么复杂算法，就是一个 <code>while True</code> 循环。真正的复杂性在于循环内部各模块的协作。</p>
+<h3 id="232-tool-registry">2.3.2 Tool Registry（工具注册与路由）</h3>
+<p>管理和路由所有可用工具。工具分为两类：</p>
+<p><strong>内置工具（Built-in Tools）：</strong></p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>能力</th>
+<th>执行位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read</td>
+<td>读取文件</td>
+<td>客户端</td>
+</tr>
+<tr>
+<td>Write</td>
+<td>创建文件</td>
+<td>客户端</td>
+</tr>
+<tr>
+<td>Edit</td>
+<td>精确编辑文件</td>
+<td>客户端</td>
+</tr>
+<tr>
+<td>Bash</td>
+<td>执行 shell 命令</td>
+<td>客户端</td>
+</tr>
+<tr>
+<td>Glob</td>
+<td>按模式查找文件</td>
+<td>客户端</td>
+</tr>
+<tr>
+<td>Grep</td>
+<td>按内容搜索文件</td>
+<td>客户端</td>
+</tr>
+<tr>
+<td>WebSearch</td>
+<td>搜索互联网</td>
+<td>服务端</td>
+</tr>
+<tr>
+<td>WebFetch</td>
+<td>抓取网页内容</td>
+<td>服务端</td>
+</tr>
+<tr>
+<td>Code Execution</td>
+<td>在沙箱中执行代码</td>
+<td>服务端（Anthropic 容器）</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>派生子 Agent</td>
+<td>Harness 内部</td>
+</tr>
+</tbody>
+</table>
+<p><strong>外部工具（MCP Tools）：</strong></p>
+<p>通过 MCP（Model Context Protocol）协议接入的第三方工具，如 Playwright（浏览器自动化）、数据库连接器等。统一接口：</p>
+<pre><code>execute(name, input) → string
+</code></pre>
+<p>Harness 不知道工具背后的实现是什么——容器、手机、还是 Pokemon 模拟器，对它来说都只是一个 <code>name + input → output</code> 的调用。</p>
+<h3 id="233-permission-system">2.3.3 Permission System（权限系统）</h3>
+<p>在 Agentic Loop 中插入安全检查点，防止 Agent 做出危险操作：</p>
+<pre><code>Agent 请求执行 &quot;rm -rf /tmp/project&quot;
+      ↓
+Permission System 检查
+      ↓
+  该操作是否在 allowed_tools 中？
+      ├── 是 → 自动批准执行
+      └── 否 → 根据 permission_mode 决定：
+            ├── &quot;default&quot; → 弹窗让用户确认
+            ├── &quot;plan&quot; → 拒绝（只规划不执行）
+            └── &quot;bypassPermissions&quot; → 跳过（仅限可信环境）
+</code></pre>
+<p>论文中的安全设计更进一步：凭证与执行环境隔离，Agent 永远不直接接触敏感 Token。</p>
+<h3 id="234-hooks">2.3.4 Hooks（钩子 / 中间件）</h3>
+<p>在 Agentic Loop 的关键节点插入自定义逻辑，类似 Web 框架的 middleware：</p>
+<pre><code>用户提交 Prompt
+    ↓
+[UserPromptSubmit hook] ← 可以修改/拒绝用户输入
+    ↓
+Claude 推理中...
+    ↓
+Claude 决定调用工具
+    ↓
+[PreToolUse hook] ← 可以拦截/修改工具调用
+    ↓
+执行工具
+    ↓
+[PostToolUse hook] ← 可以记录审计日志
+    ↓
+工具结果返回给 Claude
+    ↓
+... 继续循环 ...
+</code></pre>
+<p>可用 hook 事件：<code>PreToolUse</code>、<code>PostToolUse</code>、<code>PostToolUseFailure</code>、<code>UserPromptSubmit</code>、<code>Stop</code>、<code>SubagentStart</code>、<code>SubagentStop</code>、<code>PreCompact</code> 等。</p>
+<h3 id="235-context-management">2.3.5 Context Management（上下文管理）</h3>
+<p>Agent 执行长任务时，对话历史会超出上下文窗口（200K token）。Harness 需要处理这个问题：</p>
+<ul>
+<li><strong>Compaction（压缩）</strong>：当接近上下文窗口上限时，自动将早期上下文摘要化，用压缩块替代原始内容。压缩块必须传回 API，否则上下文状态丢失。</li>
+<li><strong>Prompt Caching（缓存）</strong>：对不变的 system prompt 和工具定义做前缀缓存，减少重复计费。缓存是前缀匹配，任意字节变化都会失效。</li>
+<li><strong>Session Log 作为外部上下文</strong>（论文核心设计）：Session Log 持久化在 Harness 之外，通过 <code>getEvents(start, end)</code> 按位置切片查询。上下文窗口里只放"当前需要的片段"，而不是全部历史。</li>
+</ul>
+<h3 id="236-subagent-management-agent">2.3.6 Subagent Management（子 Agent 管理）</h3>
+<p>主 Agent 可以 spawn 子 Agent 处理独立子任务：</p>
+<pre><code>主 Agent: &quot;Review 这个代码库&quot;
+    ↓
+spawn code-reviewer agent（独立 prompt + 工具集 + 权限）
+    ↓
+子 Agent 独立执行 Agentic Loop
+    ↓
+返回结果给主 Agent
+</code></pre>
+<p>每个子 Agent 有自己的：<br />
+- <code>prompt</code>：专门化的指令<br />
+- <code>tools</code>：受限的工具子集<br />
+- <code>permission_mode</code>：独立的权限策略<br />
+- <code>cwd</code>：独立的工作目录</p>
+<p>子 Agent 之间可以转移 Hands（执行环境），实现并行协作。</p>
+<h3 id="237-session-io">2.3.7 Session I/O（会话日志读写）</h3>
+<p>Harness 通过 Session I/O 与外部 Session Log 交互：</p>
+<pre><code>emitEvent(sessionId, event)  → 写入一条事件
+getSession(sessionId)        → 读取完整日志
+getEvents(sessionId, start, end) → 按位置切片读取
+wake(sessionId)              → 从最后事件恢复执行
+</code></pre>
+<p>Session Log 是 Agent 的"单一事实来源"——所有操作、工具调用、中间结果都追加记录于此。</p>
+<h3 id="238-memory">2.3.8 Memory（记忆模块）</h3>
+<p>Memory 是 Harness 中一个特殊的横切模块，它让 Agent 具备<strong>跨会话的持久化记忆</strong>。</p>
+<p><strong>与 Session 的区别：</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Session</th>
+<th>Memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>生命周期</td>
+<td>单次任务会话内</td>
+<td>跨会话持久化</td>
+</tr>
+<tr>
+<td>内容</td>
+<td>完整的执行轨迹（工具调用、中间结果）</td>
+<td>结构化的知识（用户偏好、项目背景）</td>
+</tr>
+<tr>
+<td>写入方式</td>
+<td>自动追加（每轮都记录）</td>
+<td>Agent 主动决定何时写入</td>
+</tr>
+<tr>
+<td>读取方式</td>
+<td>按位置切片恢复上下文</td>
+<td>启动时自动加载相关的记忆片段</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Memory 的运作机制：</strong></p>
+<pre><code>会话开始
+    ↓
+Harness 扫描 memory 目录，加载相关记忆文件
+    ↓
+注入 system prompt（作为上下文的一部分）
+    ↓
+Agent 执行过程中，通过 memory tool 读写记忆
+    ↓
+会话结束，记忆文件持久化到磁盘
+    ↓
+下次会话启动时，新的 Harness 实例重新加载这些记忆
+</code></pre>
+<p>Memory tool（<code>memory_20250818</code>）提供的操作：<code>view</code>、<code>create</code>、<code>str_replace</code>、<code>insert</code>、<code>delete</code>、<code>rename</code>——本质上是一个文件系统 CRUD 接口，但语义上是"Agent 的长期记忆"。</p>
+<hr />
+<h2 id="session-harness-sandbox">三、三大抽象：Session / Harness / Sandbox</h2>
+<p>论文将整个 Agent 系统提炼为三个核心抽象。它们之间的关系：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                        Session（追加日志）                        │
+│                                                                  │
+│  event_1 → event_2 → event_3 → ... → event_n                   │
+│                                                                  │
+│  持久化、可恢复、可切片查询。存储在 Harness 之外。                   │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ 读写
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                        Harness（无状态循环）                       │
+│                                                                  │
+│  调用 Claude → 路由工具 → 写入事件 → 读取事件 → 循环              │
+│                                                                  │
+│  无状态、可重启、可水平扩展。                                      │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ execute(name, input) → string
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      Sandbox（可替换执行环境）                     │
+│                                                                  │
+│  容器、手机、Pokemon 模拟器...Harness 不关心具体是什么。            │
+│                                                                  │
+│  可替换、可扩展、可多实例。                                        │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>设计哲学</strong>：对接口形状保持固执（opinionated），对接口背后的实现保持开放。</p>
+<table>
+<thead>
+<tr>
+<th>抽象</th>
+<th>一句话</th>
+<th>关键特性</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session</td>
+<td>发生的一切的追加日志</td>
+<td>持久化、可恢复</td>
+<td>Git 的 commit log</td>
+</tr>
+<tr>
+<td>Harness</td>
+<td>调用 Claude 并路由工具的循环</td>
+<td>无状态、可重启</td>
+<td>HTTP 服务器</td>
+</tr>
+<tr>
+<td>Sandbox</td>
+<td>代码和文件编辑的执行环境</td>
+<td>可替换、可扩展</td>
+<td>Docker 容器</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_1">四、概念边界辨析</h2>
+<h3 id="41-harness-vs-llm">4.1 Harness vs LLM</h3>
+<pre><code>LLM:        &quot;给定这个 prompt，生成下一个 token&quot;
+Harness:    &quot;让 LLM 在循环中自主工作，直到任务完成&quot;
+</code></pre>
+<p>LLM 是大脑，Harness 是中枢神经系统。没有 Harness，LLM 只能一问一答；有了 Harness，LLM 能自主规划和执行多步任务。</p>
+<h3 id="42-harness-vs-agentic-loop">4.2 Harness vs Agentic Loop</h3>
+<pre><code>Agentic Loop:  循环本身（while + API 调用 + 工具执行）
+Harness:       循环 + 权限 + Hooks + 上下文管理 + 会话管理 + 记忆 + ...
+</code></pre>
+<p>Agentic Loop 是 Harness 的<strong>核心子模块</strong>，但不是全部。Harness 包含 Loop 以及支撑 Loop 运转的所有基础设施。</p>
+<h3 id="43-harness-vs-tool-use">4.3 Harness vs Tool Use</h3>
+<pre><code>Tool Use:  LLM 选择调用工具的能力（API 层面的 feature）
+Harness:   管理工具注册、路由、权限、执行、结果回收的全套机制
+</code></pre>
+<p>Tool Use 是 LLM 的一种能力（类似于"人类会使用锤子"），Harness 是让这种能力系统化运作的管理框架（类似于"工厂里管理所有工具的工具房 + 使用规范 + 安全培训"）。</p>
+<h3 id="44-session-vs-memory-vs-context-window">4.4 Session vs Memory vs Context Window</h3>
+<pre><code>Context Window:  当前一轮 API 调用中 LLM 能看到的 token 窗口（200K）
+Session:         完整的任务执行历史日志（可能远超 200K）
+Memory:          跨多次会话持久化的结构化知识
+</code></pre>
+<p>三者的关系：<br />
+- Context Window 是"工作台"，只放当前需要的东西<br />
+- Session 是"项目档案柜"，存着完整的执行记录<br />
+- Memory 是"个人笔记本"，记着用户偏好和经验教训</p>
+<h3 id="45-tool-use-vs-mcp-vs-custom-tools">4.5 Tool Use vs MCP vs Custom Tools</h3>
+<pre><code>Tool Use:        通用概念——LLM 调用外部函数的能力
+MCP:             协议标准——定义工具如何暴露给 LLM 的统一协议
+Custom Tools:    具体实现——通过 @tool 装饰器或 Zod schema 定义的具体工具函数
+</code></pre>
+<ul>
+<li>Tool Use 是"能做什么"（能力）</li>
+<li>MCP 是"怎么做"（协议）</li>
+<li>Custom Tools 是"做什么"（具体工具）</li>
+</ul>
+<h3 id="46-subagent-vs-tool">4.6 Subagent vs Tool</h3>
+<pre><code>Tool:     一个函数调用——输入参数，返回结果（同步、原子）
+Subagent: 一个完整的 Agent——有自己的 Loop、工具集、多轮推理（异步、复杂）
+</code></pre>
+<p>Tool 是"做事"，Subagent 是"负责一个子项目"。当你需要并行处理多个独立子任务时，用 Subagent；当只需要一个简单的函数调用时，用 Tool。</p>
+<hr />
+<h2 id="_2">五、端到端数据流</h2>
+<p>一个完整的 Agent 执行流程，标注了每个阶段涉及的模块：</p>
+<pre><code>用户输入: &quot;帮我重构这个项目的认证模块&quot;
+    │
+    ↓
+[Session I/O] 创建新 Session，记录用户输入事件
+    │
+    ↓
+[Memory] 加载相关记忆（用户偏好 Python、上次重构的笔记...）
+    │
+    ↓
+[Context Mgmt] 组装 system prompt + 记忆 + 工具定义 → 发送给 Claude
+    │
+    ↓
+[Agentic Loop] ──────────────────────────────────────────────
+    │                                                         │
+    │  [LLM] Claude 推理：&quot;先读 auth 模块的代码&quot;                │
+    │       ↓                                                  │
+    │  [Tool Registry] 路由到 Read 工具                        │
+    │       ↓                                                  │
+    │  [Permission] &quot;Read&quot; 在 allowed_tools 中 → 批准          │
+    │       ↓                                                  │
+    │  [Hooks] PreToolUse: 记录审计日志                         │
+    │       ↓                                                  │
+    │  [Sandbox] 读取 auth.py 文件内容                          │
+    │       ↓                                                  │
+    │  [Hooks] PostToolUse: 日志记录完成                        │
+    │       ↓                                                  │
+    │  [Session I/O] 记录工具调用和结果事件                      │
+    │       ↓                                                  │
+    │  [Context Mgmt] 将结果追加到消息列表，检查是否需要 compaction│
+    │       ↓                                                  │
+    │  [LLM] Claude 推理：&quot;需要拆分为多个文件，spawn 子 agent&quot;   │
+    │       ↓                                                  │
+    │  [Subagent Mgmt] 启动 code-reviewer 子 Agent              │
+    │       ↓                                                  │
+    │  ... 继续循环直到 Claude 返回 end_turn ...                 │
+    │                                                         │
+    ↓                                                         │
+[Memory] Agent 主动保存重构经验到记忆文件
+    │
+    ↓
+[Session I/O] 记录最终结果，标记 Session 完成
+    │
+    ↓
+返回结果给用户
+</code></pre>
+<hr />
+<h2 id="_3">六、脑图</h2>
+<pre><code class="language-mermaid">mindmap
+  root((Agent 架构))
+    三大抽象
+      Session 追加日志
+        持久化 可恢复
+        外部上下文对象
+        getEvents 位置切片
+      Harness 无状态循环
+        Agentic Loop 核心
+        Tool Registry 路由
+        Permission 权限
+        Hooks 中间件
+        Context Mgmt 上下文
+        Subagent 子Agent
+        Memory 记忆
+      Sandbox 可替换环境
+        execute name input string
+        容器 手机 模拟器
+        可多实例 Many Hands
+    核心概念边界
+      Harness vs LLM
+        LLM 一问一答
+        Harness 自主循环
+      Harness vs Agentic Loop
+        Loop 是 Harness 的子模块
+      Tool Use vs MCP
+        能力 vs 协议 vs 实现
+      Session vs Memory
+        单会话执行日志 vs 跨会话知识
+      Subagent vs Tool
+        子项目 vs 函数调用
+    设计哲学
+      为未知程序而设计
+      接口固执 实现开放
+      模型假设会过时
+      脑手分离
+      无状态优先
+</code></pre>
+<hr />
+<h2 id="_4">参考文献</h2>
+<ul>
+<li><a href="https://www.anthropic.com/engineering/managed-agents">Scaling Managed Agents: Decoupling the Brain from the Hands</a> — Anthropic, 2026.02（本文核心参考）</li>
+<li><a href="https://www.anthropic.com/research/building-effective-agents">Building Effective Agents with Claude</a> — Anthropic, 2025.06</li>
+<li><a href="https://www.anthropic.com/research/claude-code">Introducing Claude Code</a> — Anthropic, 2025.02</li>
+<li><a href="https://arxiv.org/abs/2210.03629">ReAct: Synergizing Reasoning and Acting in Language Models</a> — Agentic Loop 的理论基础</li>
+<li><a href="https://modelcontextprotocol.io/">MCP (Model Context Protocol)</a> — 工具接入协议</li>
+<li><a href="https://github.com/anthropics/claude-agent-sdk-python">Claude Agent SDK Python</a> — SDK 实现</li>
+<li><a href="https://github.com/anthropics/claude-agent-sdk-typescript">Claude Agent SDK TypeScript</a> — SDK 实现</li>
+</ul></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

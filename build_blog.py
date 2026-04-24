@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+"""Blog build script with LaTeX and table support."""
+
 import json, re
 from pathlib import Path
-try: import markdown; HAS_MD=True
-except: HAS_MD=False
+
+try:
+    import markdown
+    from markdown.extensions.tables import TableExtension
+    HAS_MD = True
+except ImportError:
+    HAS_MD = False
+    print("Warning: markdown library not installed. Run: pip install markdown")
 
 BASE = Path(__file__).parent
 POSTS = BASE / "_posts"
@@ -12,33 +20,44 @@ OUT = BLOG / "posts"
 def parse_fm(c):
     if not c.startswith('---'): return {}, c
     end = c.find('---', 3)
-    if end==-1: return {}, c
+    if end == -1: return {}, c
     fm, body = c[3:end].strip(), c[end+3:].strip()
-    m={}
+    m = {}
     for l in fm.split('\n'):
         if ':' in l:
-            k,v=l.split(':',1)
-            k,v=k.strip(),v.strip()
-            if v.startswith('['): v=[x.strip() for x in v[1:-1].split(',')]
-            m[k]=v
+            k, v = l.split(':', 1)
+            k, v = k.strip(), v.strip()
+            if v.startswith('['): v = [x.strip() for x in v[1:-1].split(',')]
+            m[k] = v
     return m, body
 
 def slug(f):
-    n=f.stem
-    return n[11:] if re.match(r'\d{4}-\d{2}-\d{2}-',n) else n
+    n = f.stem
+    return n[11:] if re.match(r'\d{4}-\d{2}-\d{2}-', n) else n
 
 def render(b):
-    if HAS_MD: return markdown.Markdown(extensions=['fenced_code']).convert(b)
+    if HAS_MD:
+        # Use markdown with tables extension
+        md = markdown.Markdown(extensions=[
+            'fenced_code',
+            'tables',
+            'toc',
+            'nl2br'
+        ])
+        html = md.convert(b)
+        # Keep LaTeX formulas as-is (will be rendered by MathJax in browser)
+        return html
     return '\n'.join(f'<p>{p}</p>' for p in b.split('\n\n') if p)
 
-def gen(m,b,s):
-    h=render(b)
-    cat=m.get('category','other')
-    tg=m.get('tags',[])
-    if isinstance(tg,str): tg=[tg]
-    tg_h=' '.join(f'<span class="tag-item">{t}</span>' for t in tg)
+def gen(m, b, s):
+    h = render(b)
+    cat = m.get('category', 'other')
+    tg = m.get('tags', [])
+    if isinstance(tg, str): tg = [tg]
+    tg_h = ' '.join(f'<span class="tag-item">{t}</span>' for t in tg)
+    
     return f'''<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,6 +66,47 @@ def gen(m,b,s):
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
 <link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {{
+  tex: {{
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  }},
+  svg: {{
+    fontCache: 'global'
+  }}
+}};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {{
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}}
+.blog-detail-body table th,
+.blog-detail-body table td {{
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}}
+.blog-detail-body table th {{
+  background-color: #f5f5f5;
+  font-weight: 600;
+}}
+.blog-detail-body table tr:nth-child(even) {{
+  background-color: #fafafa;
+}}
+.blog-detail-body table tr:hover {{
+  background-color: #f0f0f0;
+}}
+</style>
 </head>
 <body>
 <nav class="top-nav">
@@ -77,7 +137,7 @@ def gen(m,b,s):
           <div class="blog-card-tags">{tg_h}</div>
         </header>
         <div class="blog-detail-body">{h}</div>
-        <a href="../index.html" class="blog-back">← Back to Blog</a>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
       </article>
     </main>
   </div>
@@ -87,18 +147,26 @@ def gen(m,b,s):
 </html>'''
 
 def build():
-    OUT.mkdir(parents=True,exist_ok=True)
-    idx=[]
-    for f in sorted(POSTS.glob('*.md'),reverse=True):
+    OUT.mkdir(parents=True, exist_ok=True)
+    idx = []
+    for f in sorted(POSTS.glob('*.md'), reverse=True):
         print(f"Processing: {f.name}")
-        m,b=parse_fm(f.read_text())
+        m, b = parse_fm(f.read_text(encoding='utf-8'))
         if not m: continue
-        s=slug(f)
-        (OUT/f"{s}.html").write_text(gen(m,b,s))
-        tg=m.get('tags',[])
-        if isinstance(tg,str): tg=[tg]
-        idx.append({'title':m.get('title','Untitled'),'date':m.get('date',''),'category':m.get('category','other'),'tags':tg,'excerpt':m.get('excerpt',b[:120]+'...'),'slug':s})
-    (BLOG/'index.json').write_text(json.dumps(idx,indent=2))
+        s = slug(f)
+        (OUT / f"{s}.html").write_text(gen(m, b, s), encoding='utf-8')
+        tg = m.get('tags', [])
+        if isinstance(tg, str): tg = [tg]
+        idx.append({
+            'title': m.get('title', 'Untitled'),
+            'date': m.get('date', ''),
+            'category': m.get('category', 'other'),
+            'tags': tg,
+            'excerpt': m.get('excerpt', b[:150] + '...'),
+            'slug': s
+        })
+    (BLOG / 'index.json').write_text(json.dumps(idx, indent=2, ensure_ascii=False), encoding='utf-8')
     print(f"Built {len(idx)} posts")
 
-if __name__=='__main__': build()
+if __name__ == '__main__':
+    build()

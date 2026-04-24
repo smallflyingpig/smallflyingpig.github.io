@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantifying Infrastructure Noise in Agentic Coding Evals - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">Quantifying Infrastructure Noise in Agentic Coding Evals</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-02-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h1 id="quantifying-infrastructure-noise-in-agentic-coding-evals">Quantifying Infrastructure Noise in Agentic Coding Evals</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>标题</strong>: Quantifying Infrastructure Noise in Agentic Coding Evals</li>
+<li><strong>作者</strong>: Gian Segato, Nicholas Carlini, Jeremy Hadfield, Mike Merrill, Alex Shaw</li>
+<li><strong>机构</strong>: Anthropic</li>
+<li><strong>发表时间</strong>: 2026年2月3日</li>
+<li><strong>论文链接</strong>: https://www.anthropic.com/engineering/infrastructure-noise</li>
+</ul>
+<h2 id="_2">一、研究背景与动机</h2>
+<p>当前 Agent 编码基准（如 SWE-bench、Terminal-Bench）的排行榜分数差异常被用来判断模型能力优劣，但这些基准忽略了一个关键变量：<strong>基础设施配置</strong>。</p>
+<p>静态基准（如 MMLU）直接评估模型输出，运行环境与评分无关。但 Agent 编码基准有本质不同：模型在完整环境中编写代码、运行测试、安装依赖、多轮迭代——<strong>运行时成为问题解决过程的组成部分</strong>。正如文章所言："资源预算和时间限制不同的两个 Agent，不是在做同一份试卷。"</p>
+<p>Anthropic 团队在 Google Kubernetes Engine 上运行 Terminal-Bench 2.0 校准时，发现分数与官方排行榜不一致，基础设施错误率高达 <strong>6%</strong>，且大多数 Pod 错误与模型能力无关。这促使他们系统性地研究基础设施噪声对 Agent 基准评估的影响。</p>
+<h2 id="_3">二、核心贡献</h2>
+<ol>
+<li><strong>量化了基础设施噪声的量级</strong>：资源配置差异可导致 Agent 编码基准分数偏移高达 6 个百分点——这通常超过排行榜上顶级模型之间的差距</li>
+<li><strong>揭示了严格执行资源限制的陷阱</strong>：将资源规格同时设为保底和上限时，瞬态峰值会导致 OOM Kill，制造与模型能力无关的失败</li>
+<li><strong>识别了资源限制改变评估本质的临界点</strong>：约 3 倍规格以下，额外资源修复基础设施可靠性问题；3 倍以上，额外资源使 Agent 能解决之前不可解的问题——评估测量的东西变了</li>
+<li><strong>提出了可操作的评估标准化建议</strong>：分别指定保证分配和硬性终止阈值，通过实证校准两者间距</li>
+<li><strong>跨基准和跨模型验证</strong>：在 SWE-bench 和多个 Anthropic 模型上复现了核心发现</li>
+</ol>
+<h2 id="_4">三、方法详解</h2>
+<h3 id="31">3.1 问题根源：执行方法论的差异</h3>
+<p>容器运行时使用两个参数：<br />
+- <strong>保证分配（guaranteed allocation）</strong>：最低资源保障<br />
+- <strong>终止阈值（kill threshold）</strong>：触发 OOM Kill 的上限</p>
+<p>Terminal-Bench 的官方沙箱提供者允许临时超额分配以维持稳定性。而 Anthropic 的 Kubernetes 设置将每任务规格同时作为保底和硬上限——容器超出限制后立即被杀。当两者设为相同时，<strong>零余量</strong>应对瞬态峰值，一次短暂的内存波动就能 OOM Kill 一个本应成功的容器。</p>
+<h3 id="32">3.2 实验设计</h3>
+<p>在 6 种资源配置下运行 Terminal-Bench 2.0，从严格执行（1x，规格同时为保底和上限）到完全无限制。其他条件全部恒定：相同的 Claude 模型、相同的 Harness、相同的任务集。</p>
+<h3 id="33-swe-bench">3.3 跨基准验证（SWE-bench）</h3>
+<p>在 SWE-bench 上进行交叉实验，将 RAM 从基线变化到 5 倍，覆盖 227 个问题，每个 10 个样本。</p>
+<h3 id="34">3.4 跨模型复现</h3>
+<p>在不同 Anthropic 模型上复现核心发现，效应方向一致，量级随模型变化。</p>
+<h2 id="_5">四、实验设计与结果</h2>
+<h3 id="41">4.1 基础设施错误率</h3>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>基础设施错误率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1x（严格执行）</td>
+<td>5.8%</td>
+</tr>
+<tr>
+<td>3x</td>
+<td>2.1%</td>
+</tr>
+<tr>
+<td>Uncapped</td>
+<td>0.5%</td>
+</tr>
+</tbody>
+</table>
+<p>从 1x 到 3x 的降低在 p &lt; 0.001 水平上统计显著。</p>
+<h3 id="42">4.2 成功率</h3>
+<table>
+<thead>
+<tr>
+<th>资源范围</th>
+<th>效应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1x–3x</td>
+<td>成功率在噪声范围内波动（p = 0.40），1x 崩溃的任务多数本就会失败</td>
+</tr>
+<tr>
+<td>3x–Uncapped</td>
+<td>基础设施错误再降 1.6 个百分点，成功率跃升近 4 个百分点</td>
+</tr>
+<tr>
+<td>1x vs Uncapped</td>
+<td><strong>总提升 +6 个百分点</strong>（p &lt; 0.01）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-swe-bench">4.3 SWE-bench 交叉验证</h3>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>分数变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5x vs 1x</td>
+<td>仅 +1.54 个百分点</td>
+</tr>
+</tbody>
+</table>
+<p>SWE-bench 任务资源密集度较低，但资源分配仍非中性。</p>
+<h3 id="44-bn-fit-modify">4.4 关键案例：bn-fit-modify</h3>
+<p>贝叶斯网络拟合任务：某些模型的默认策略是安装 pandas、networkx、scikit-learn 及其完整工具链。在宽裕限制下可行；在紧张限制下，Pod 在安装阶段就 OOM，还没写出任何解决代码。更精简的策略（用标准库从头实现数学计算）存在，但并非所有模型默认采用。</p>
+<p><strong>核心洞见</strong>："不同模型有不同的默认策略，资源配置决定了哪些策略恰好能成功。"</p>
+<h3 id="45">4.5 其他方差来源</h3>
+<ul>
+<li><strong>时间限制</strong>：某些配置下影响结果</li>
+<li><strong>集群健康、硬件规格、并发级别、出口带宽</strong>：Agent 评估是端到端系统测试，任何组件都可能是混淆因素</li>
+<li><strong>时段效应</strong>：观察到通过率随一天中的时间波动，可能源于 API 延迟随流量模式变化</li>
+</ul>
+<h2 id="_6">五、关键创新点</h2>
+<ol>
+<li><strong>"基础设施噪声"概念的精确量化</strong>：首次用受控实验证明 Agent 基准评估中基础设施配置可造成 6 个百分点的分数偏移</li>
+<li><strong>"评估本质改变"的临界点识别</strong>：3 倍规格是一个关键分水岭——之下修复可靠性，之上改变评估内容</li>
+<li><strong>"两个参数"方法论</strong>：提出评估应分别指定保证分配和终止阈值，而非单一固定值，从根本上解决瞬态峰值问题</li>
+<li><strong>实证校准方法</strong>：通过调整上限和保底间距直到两端分数落在噪声范围内，提供可操作的标准化路径</li>
+</ol>
+<h2 id="_7">六、局限性与未来工作</h2>
+<h3 id="_8">局限性</h3>
+<ol>
+<li><strong>非 Claude 模型验证不充分</strong>：趋势看起来对非 Claude 模型也成立，但尚未完成严格测试</li>
+<li><strong>临界点的普适性</strong>：3 倍规格的临界点可能因基准而异，文章仅基于 Terminal-Bench 2.0 和 SWE-bench</li>
+<li><strong>其他噪声源未完全量化</strong>：API 延迟波动、时段效应等因素仅定性描述，未给出定量分析</li>
+<li><strong>理想方案的实践障碍</strong>：在相同硬件条件下运行评估最为理想，但公开评估中难以实现</li>
+</ol>
+<h3 id="_9">未来方向</h3>
+<ol>
+<li>基准维护者应将执行方法论与资源规格一同指定</li>
+<li>基准消费者应理解小分数差异携带的不确定性远超报告数字的精度所暗示</li>
+<li>将资源配置视为与 prompt 格式、采样温度同等的一级实验变量</li>
+</ol>
+<h2 id="_10">七、个人思考</h2>
+<h3 id="_11">核心洞见</h3>
+<p>这篇文章最深刻的观点是：<strong>资源限制不仅影响评估的精度，还改变了评估的本质</strong>。当资源配置从"紧张"变为"宽裕"时，评估从"测哪个 Agent 更高效"变成了"测哪个 Agent 更能利用资源"——这是两个不同的能力维度。</p>
+<h3 id="agent">对 Agent 评估的启示</h3>
+<ol>
+<li><strong>排行榜的表面精度具有欺骗性</strong>：2 个百分点的领先可能反映真实能力差距，也可能只是更大的 VM</li>
+<li><strong>评估是端到端系统测试</strong>：Agent 评估不是纯模型测试，任何系统组件都是潜在的混淆因素</li>
+<li><strong>默认策略的隐含假设</strong>：不同模型的"默认做事方式"不同，资源配置在隐含地选择哪种策略能成功</li>
+<li><strong>标准化需深入到执行层面</strong>：仅规定资源规格不够，还需规定执行方法论（如何执行限制）</li>
+</ol>
+<h3 id="_12">与相关工作的联系</h3>
+<ul>
+<li>与传统软件基准测试中的"环境变量控制"问题类似，但 Agent 评估的复杂性远超传统基准</li>
+<li>与 ML 可复现性危机一脉相承——但 Agent 评估中基础设施的影响量级（6 个百分点）远超传统训练可复现性的波动</li>
+<li>与"评估即产品"的理念呼应：评估工具本身的设计选择（如何执行限制）成为了评估结果的一部分</li>
+</ul>
+<h3 id="_13">关键阈值</h3>
+<p>文章提出了一个实用经验法则：<strong>在资源方法论标准化之前，排行榜上低于 3 个百分点的差距值得怀疑，直到评估配置被文档化并对齐。</strong></p>
+<h2 id="_14">脑图结构</h2>
+<pre><code class="language-mermaid">mindmap
+  root((基础设施噪声))
+    问题发现
+      分数与排行榜不一致
+      基础设施错误率6%
+      执行方法论差异
+    核心发现
+      资源配置可偏移6个百分点
+      3倍规格是临界点
+      之下修复可靠性 之上改变评估本质
+    实验设计
+      6种资源配置
+      跨基准SWE-bench验证
+      跨模型复现
+    关键案例
+      bn-fit-modify
+      默认策略决定成败
+      资源配置选择策略
+    建议
+      分别指定保底和上限
+      实证校准间距
+      多时段运行取平均
+    启示
+      排行榜精度具欺骗性
+      低于3个百分点值得怀疑
+      资源配置是一级实验变量
+</code></pre>
+<blockquote>
+<p>💡 <strong>提示</strong>：可将上述 Mermaid 代码粘贴到 <a href="https://mermaid.live/">Mermaid Live Editor</a> 或支持 Mermaid 的编辑器中查看</p>
+</blockquote>
+<h2 id="_15">相关论文</h2>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.06770">SWE-bench: Can Language Models Resolve Real-World GitHub Issues?</a> — 本文核心验证基准之一</li>
+<li><a href="https://terminal-bench.com/">Terminal-Bench</a> — 本文主要研究对象，端到端评估 LLM 终端操作能力的基准</li>
+<li><a href="https://arxiv.org/abs/2211.09110">Holistic Evaluation of Language Models (HELM)</a> — LLM 评估方法论的经典框架</li>
+<li><a href="https://www.anthropic.com/engineering/managed-agents">Scaling Managed Agents: Decoupling the Brain from the Hands</a> — 同为 Anthropic 的 Agent 基础设施研究，互补视角</li>
+<li><a href="https://arxiv.org/abs/2206.04615">BigBench</a> — 大规模基准测试，静态评估的代表</li>
+</ul>
+<h2 id="_16">参考文献</h2>
+<ul>
+<li>Terminal-Bench 2.0 — 首个指定每任务 CPU 和 RAM 推荐的 Agent 基准</li>
+<li>Container Runtime 资源管理 — guaranteed allocation 与 kill threshold 的双参数设计</li>
+<li>Kubernetes Resource Enforcement — GKE 上的严格执行 vs. 宽裕执行</li>
+<li>Binomial Confidence Intervals — 1-2 个百分点的统计噪声基线</li>
+</ul></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

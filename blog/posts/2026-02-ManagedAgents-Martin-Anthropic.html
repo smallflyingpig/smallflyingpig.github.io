@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scaling Managed Agents: Decoupling the Brain from the Hands - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">Scaling Managed Agents: Decoupling the Brain from the Hands</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-02-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h1 id="scaling-managed-agents-decoupling-the-brain-from-the-hands">Scaling Managed Agents: Decoupling the Brain from the Hands</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>标题</strong>: Scaling Managed Agents: Decoupling the Brain from the Hands</li>
+<li><strong>作者</strong>: Lance Martin, Gabe Cemaj, Michael Cohen</li>
+<li><strong>机构</strong>: Anthropic</li>
+<li><strong>发表时间</strong>: 2026年2月4日</li>
+<li><strong>论文链接</strong>: https://www.anthropic.com/engineering/managed-agents</li>
+</ul>
+<h2 id="_2">一、研究背景与动机</h2>
+<p>Agent 系统设计中存在一个反复出现的核心问题：<strong>Harness（控制框架）会编码关于模型能力局限性的假设，而这些假设随着模型能力提升而过时（go stale）</strong>。</p>
+<p>典型案例：Claude Sonnet 4.5 表现出"上下文焦虑"——在接近上下文窗口限制时过早结束任务。为此，Harness 中加入了上下文重置机制。但当同一个 Harness 用于 Claude Opus 4.5 时，这种行为已完全消失，重置机制反而成了不必要的开销。</p>
+<p>这引出了一个更深层的架构问题：如何设计一个能超越特定模型实现、适应未来模型能力演化的 Agent 系统？</p>
+<h2 id="_3">二、核心贡献</h2>
+<ol>
+<li><strong>提出"脑手分离"架构范式</strong>：将 Agent 的 Brain（推理）、Hands（执行）、Session（状态）解耦为独立接口，各组件可独立替换和故障恢复</li>
+<li><strong>设计面向未来的稳定接口</strong>：借鉴操作系统虚拟化硬件的思路（process、file 抽象），定义了 Session、Harness、Sandbox 三大抽象，使其能适应未知模型的未来需求</li>
+<li><strong>实现凭证隔离的安全边界</strong>：通过 Auth-bundled-with-resources 和 Vault-stored credentials 两种模式，确保 Agent 永远不直接接触敏感凭证</li>
+<li><strong>将 Session 作为外部上下文对象</strong>：突破上下文窗口限制，Session Log 作为持久化的上下文对象，支持灵活的位置切片查询</li>
+<li><strong>验证多脑多手的扩展性</strong>：解耦后 p50 TTFT 降低约 60%，p95 TTFT 降低超过 90%</li>
+</ol>
+<h2 id="_4">三、方法详解</h2>
+<h3 id="31">3.1 设计哲学：为未知的程序而设计</h3>
+<p>核心类比来自操作系统设计：操作系统通过将硬件虚拟化为 <em>process</em> 和 <em>file</em> 等抽象，使 <code>read()</code> 命令在 1970 年的磁盘和现代 SSD 上工作方式完全一致。</p>
+<p>Managed Agents 将同样的模式应用于 Agent 组件虚拟化：</p>
+<table>
+<thead>
+<tr>
+<th>抽象</th>
+<th>定义</th>
+<th>关键特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Session</strong></td>
+<td>发生的一切的追加日志</td>
+<td>持久化、可恢复</td>
+</tr>
+<tr>
+<td><strong>Harness</strong></td>
+<td>调用 Claude 并路由工具调用的循环</td>
+<td>无状态、可重启</td>
+</tr>
+<tr>
+<td><strong>Sandbox</strong></td>
+<td>代码和文件编辑的执行环境</td>
+<td>可替换、可扩展</td>
+</tr>
+</tbody>
+</table>
+<p><strong>核心原则</strong>：对接口形状保持固执（opinionated），对接口背后的实现保持开放。</p>
+<h3 id="32">3.2 从"宠物"到"牲畜"的架构演进</h3>
+<p><strong>初始架构（单容器耦合）</strong>：Session、Harness、Sandbox 全部运行在一个容器中。优势是直接系统调用，无需服务边界设计；但形成了"宠物"——一个不可丢失的手工照料实例。</p>
+<p><strong>问题</strong>：<br />
+- 容器故障 = Session 丢失，无响应容器需要人工修复<br />
+- 调试几乎不可能——只有 WebSocket 事件流，无法定位故障位置<br />
+- 基础设施锁定——需要访问 VPC 的客户必须网络对等或自行运行 Harness</p>
+<p><strong>解耦架构</strong>：将 Brain、Hands、Session 分离为独立接口，各自可独立故障和替换。</p>
+<h3 id="33-harness">3.3 Harness 离开容器</h3>
+<p>Harness 不再驻留在容器内，而是将容器当作工具调用：<code>execute(name, input) → string</code>。</p>
+<p>容器变成"牲畜"——如果容器死亡，Harness 将失败作为工具调用错误捕获并返回给 Claude，新容器可通过 <code>provision({resources})</code> 初始化。</p>
+<h3 id="34-harness">3.4 Harness 自身的故障恢复</h3>
+<p>Harness 本身也变成了"牲畜"。由于 Session Log 驻留在 Harness 之外，Harness 内部不需要任何可存活状态。恢复机制：<br />
+- <code>wake(sessionId)</code> — 重启一个新的 Harness<br />
+- <code>getSession(id)</code> — 检索事件日志<br />
+- <code>emitEvent(id, event)</code> — 在 Agent 循环中持久记录事件</p>
+<p>Harness 从最后一个事件恢复执行。</p>
+<h3 id="35">3.5 安全边界：凭证隔离</h3>
+<p>耦合设计中，Claude 生成的不可信代码与凭证运行在同一容器中。Prompt 注入可诱导 Claude 读取自身环境变量，提取 Token 来生成无限制会话。</p>
+<p><strong>两种凭证隔离模式</strong>：</p>
+<ol>
+<li><strong>Auth 捆绑于资源</strong>：以 Git 为例，每个仓库的访问 Token 在 Sandbox 初始化时用于 clone 仓库并配置本地 git remote，<code>push</code>/<code>pull</code> 无需 Agent 接触 Token</li>
+<li><strong>Vault 存储凭证</strong>：对于通过 MCP 的自定义工具，OAuth Token 存储在安全 Vault 中。Claude 通过专用代理调用 MCP 工具，代理使用 Session Token 从 Vault 获取凭证进行外部调用，Harness 永远看不到凭证</li>
+</ol>
+<h3 id="36-session-claude">3.6 Session 不是 Claude 的上下文窗口</h3>
+<p>长时任务经常超出上下文窗口长度。传统方法（压缩/记忆工具/上下文裁剪）都涉及关于保留什么内容的不可逆决策，且难以预测未来回合需要哪些 Token。</p>
+<p>Managed Agents 中，<strong>Session Log 作为持久化的上下文对象存在于上下文窗口之外</strong>。<code>getEvents()</code> 接口允许 Brain 灵活查询事件流的位置切片：<br />
+- 从上次停止阅读的位置继续<br />
+- 回退查看特定时刻前的上下文<br />
+- 重新阅读特定动作前的上下文</p>
+<p>获取的事件可在 Harness 中转换后再传入 Claude 的上下文窗口，支持 prompt cache 优化、上下文工程等操作。分离确保了 Session 中的持久化可恢复上下文存储，同时将任意的上下文管理推入 Harness——因为未来模型的具体需求是不可预测的。</p>
+<h3 id="37">3.7 多脑多手</h3>
+<p><strong>多脑（Many Brains）</strong>：<br />
+- 解耦解决了客户 VPC 访问问题——不再需要网络对等<br />
+- 性能提升显著：推理在拉取待处理事件后立即开始，容器按需供给<br />
+  - p50 TTFT 降低约 <strong>60%</strong><br />
+  - p95 TTFT 降低超过 <strong>90%</strong><br />
+- 扩展到多脑 = 启动多个无状态 Harness，按需连接 Hands</p>
+<p><strong>多手（Many Hands）</strong>：<br />
+- 每个 Brain 可连接多个 Hands，Claude 推理多个执行环境并决定工作路由<br />
+- 早期模型无法处理，单容器即可；随智能提升，单容器成为瓶颈<br />
+- 统一接口 <code>execute(name, input) → string</code> 支持任何自定义工具、MCP Server 或 Anthropic 自有工具<br />
+- Harness 不知道 Sandbox 是"容器、手机还是 Pokémon 模拟器"<br />
+- Brain 之间可互相转移 Hands</p>
+<h2 id="_5">四、实验设计与结果</h2>
+<h3 id="_6">性能优化结果</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>改善幅度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>p50 TTFT（首 Token 时间）</td>
+<td>降低约 60%</td>
+</tr>
+<tr>
+<td>p95 TTFT</td>
+<td>降低超过 90%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">架构对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>耦合架构（单容器）</th>
+<th>解耦架构</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>故障恢复</td>
+<td>手工修复容器</td>
+<td>自动捕获错误、重新供给</td>
+</tr>
+<tr>
+<td>调试能力</td>
+<td>仅 WebSocket 事件流</td>
+<td>组件独立可观测</td>
+</tr>
+<tr>
+<td>VPC 访问</td>
+<td>需网络对等</td>
+<td>直接连接</td>
+</tr>
+<tr>
+<td>凭证安全</td>
+<td>同容器运行风险</td>
+<td>Vault 代理隔离</td>
+</tr>
+<tr>
+<td>扩展模式</td>
+<td>单实例瓶颈</td>
+<td>多脑多手弹性扩展</td>
+</tr>
+<tr>
+<td>TTFT 开销</td>
+<td>全量容器启动成本</td>
+<td>按需供给、即时推理</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_8">五、关键创新点</h2>
+<ol>
+<li><strong>"脑手分离"架构范式</strong>：借鉴操作系统虚拟化思路，将 Agent 分解为 Session/Harness/Sandbox 三大抽象接口，实现面向未来模型能力的架构弹性</li>
+<li><strong>Harness 无状态化</strong>：Harness 作为无状态的"牲畜"，通过 Session Log 持久化实现故障恢复，彻底解决了单点故障问题</li>
+<li><strong>Session Log 作为外部上下文对象</strong>：突破了上下文窗口的硬限制，将上下文管理从"不可逆裁剪"转变为"可编程查询"</li>
+<li><strong>凭证隔离的安全设计</strong>：Auth-bundled-with-resources + Vault proxy 双模式，从架构层面消除了 Prompt 注入窃取凭证的风险</li>
+<li><strong>统一工具接口</strong>：<code>execute(name, input) → string</code> 的极简抽象，使 Harness 对底层执行环境完全无感知，实现了真正的可替换性</li>
+</ol>
+<h2 id="_9">六、局限性与未来工作</h2>
+<h3 id="_10">文章未深入讨论的局限</h3>
+<ol>
+<li><strong>多脑协调的复杂性</strong>：多个 Brain 之间如何协调共享状态、避免冲突，文章仅提到"可转移 Hands"但未详述协调机制</li>
+<li><strong>Session Log 的查询效率</strong>：长时间任务的 Session Log 可能非常庞大，<code>getEvents()</code> 的性能特征和优化策略未讨论</li>
+<li><strong>多手场景的认知负荷</strong>：Claude 需要推理多个执行环境并决定工作路由，这对模型能力的更高要求可能成为新的瓶颈</li>
+<li><strong>安全边界的新风险</strong>：Vault proxy 本身成为新的攻击面，其安全性假设未深入分析</li>
+</ol>
+<h3 id="_11">未来方向</h3>
+<ol>
+<li>适应更智能模型的多脑多手编排策略</li>
+<li>更精细的上下文工程和 Prompt Cache 优化</li>
+<li>支持 Claude Code 和特定领域 Agent Harness 的多样化接入</li>
+</ol>
+<h2 id="_12">七、个人思考</h2>
+<h3 id="_13">核心洞见</h3>
+<p>这篇文章最深刻的洞见是：<strong>Harness 编码的模型能力假设会过时</strong>。这不是一个工程问题，而是一个架构哲学问题。当模型能力持续快速演进时，系统的设计必须面向"未知的未来"，而非"已知的现在"。这与操作系统设计中"为未写的程序而设计"的思路高度一致。</p>
+<h3 id="_14">与相关工作的联系</h3>
+<ul>
+<li>与微服务架构的"数据库每服务一个"原则类似，解耦的本质是消除共享状态带来的耦合</li>
+<li>Session Log 作为外部上下文对象的设计，与 Event Sourcing 模式异曲同工——用事件序列替代可变状态</li>
+<li>安全边界的 Vault 代理模式，与零信任架构中的"永不信任，始终验证"原则一致</li>
+</ul>
+<h3 id="agent">对 Agent 系统设计的启示</h3>
+<ol>
+<li><strong>接口优于实现</strong>：定义稳定的接口形状，允许实现自由演化</li>
+<li><strong>无状态优先</strong>：将状态外置到持久化存储，使计算组件可随时替换</li>
+<li><strong>安全从架构入手</strong>：凭证隔离应作为架构约束而非补丁</li>
+<li><strong>面向扩展设计</strong>：假设未来的模型比现在更强，系统不应因模型能力提升而产生冗余开销</li>
+</ol>
+<h2 id="_15">脑图结构</h2>
+<pre><code class="language-mermaid">mindmap
+  root((Managed Agents))
+    设计哲学
+      为未知程序而设计
+      接口固执 实现开放
+      模型假设会过时
+    三大抽象
+      Session 追加日志
+      Harness 无状态循环
+      Sandbox 可替换执行环境
+    脑手分离
+      Harness离开容器
+      容器变牲畜
+      Harness自身无状态化
+    安全边界
+      Auth捆绑于资源
+      Vault存储凭证
+      代理模式隔离
+    上下文管理
+      Session Log外部上下文
+      getEvents位置切片
+      上下文管理推入Harness
+    多脑多手
+      p50 TTFT降低60%
+      p95 TTFT降低90%
+      统一execute接口
+</code></pre>
+<blockquote>
+<p>💡 <strong>提示</strong>：可将上述 Mermaid 代码粘贴到 <a href="https://mermaid.live/">Mermaid Live Editor</a> 或支持 Mermaid 的编辑器中查看</p>
+</blockquote>
+<h2 id="_16">相关论文</h2>
+<ul>
+<li><a href="https://arxiv.org/abs/2212.08073">Constitutional AI: Harmlessness from AI Feedback</a> — Anthropic 对齐方法论，Agent 安全的基础</li>
+<li><a href="https://arxiv.org/abs/2302.04761">Toolformer</a> — LLM 自学使用工具，Agent 工具使用的早期探索</li>
+<li><a href="https://arxiv.org/abs/2210.03629">ReAct</a> — 推理+行动的 Agent 范式，Harness 设计的理论基础</li>
+<li><a href="https://arxiv.org/abs/2303.11366">Reflexion</a> — Agent 自我反思，Session Log 设计的相关思路</li>
+<li><a href="https://modelcontextprotocol.io/">MCP (Model Context Protocol)</a> — Anthropic 提出的工具接入协议，与本文 MCP 工具集成直接相关</li>
+</ul>
+<h2 id="_17">参考文献</h2>
+<ul>
+<li>Operating Systems: Three Easy Pieces — 操作系统虚拟化设计的经典参考</li>
+<li>Event Sourcing Pattern — 事件溯源架构模式，与 Session Log 设计思路一致</li>
+<li>Pets vs Cattle — 云计算基础设施的运维哲学</li>
+<li><a href="https://platform.claude.com/docs/en/managed-agents/overview">Managed Agents Documentation</a> — Anthropic 官方文档</li>
+</ul></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

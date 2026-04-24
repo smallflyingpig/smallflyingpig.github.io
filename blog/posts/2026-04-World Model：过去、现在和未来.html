@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Model：过去、现在和未来 - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">World Model：过去、现在和未来</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h1 id="world-model">World Model：过去、现在和未来</h1>
+<p>World Model（世界模型）是当前具身智能（Embodied AI）领域最受关注的技术路线之一。从 LeCun 提出 JEPA、OpenAI 用 Sora 定义"视频生成即世界模拟器"，到 DeepMind 用 Genie 生成可交互环境，这条路线在近三年快速演进。本文梳理 World Model 要解决的核心问题、主流技术路线、里程碑式工作，以及未来发展方向。</p>
+<hr />
+<h2 id="world-model_1">一、World Model 要解决什么问题</h2>
+<h3 id="11">1.1 核心直觉：让机器拥有"想象力"</h3>
+<p>World Model 的本质是一个<strong>环境模拟器</strong>——它让智能体能够<strong>在脑中预演</strong>"如果我做了这个动作，世界会怎样变化"，从而在不真正执行的情况下进行规划和决策。</p>
+<p>类比人类：你在倒水之前，大脑里已经模拟了"倾斜水壶→水流出→杯子满"的过程。World Model 就是让机器人也具备这种能力。</p>
+<h3 id="12">1.2 传统具身智能的瓶颈</h3>
+<p>传统的具身智能路线是 <strong>感知→决策→执行</strong>（perception-action loop），存在三个根本性瓶颈：</p>
+<ol>
+<li><strong>试错成本高</strong>：真实世界试错代价大（摔坏东西、伤到人），强化学习的样本效率极低</li>
+<li><strong>长程规划困难</strong>：复杂任务需要多步规划，每一步的不确定性会累积放大</li>
+<li><strong>泛化能力差</strong>：在新环境中缺乏对"世界如何运作"的理解，换个场景就失效</li>
+</ol>
+<h3 id="13-world-model">1.3 World Model 的解法</h3>
+<p>World Model 通过<strong>学会"世界运行的规律"</strong>，让智能体可以在"想象"中试错和规划，大幅降低对真实交互的依赖：</p>
+<pre><code>传统路线：  感知 → 决策 → 执行 → 观察结果（真实世界，成本高）
+World Model：感知 → 决策 → 想象结果 → 评估 → 再决策 → 最终执行（想象中试错，成本低）
+</code></pre>
+<blockquote>
+<p>LeCun：<em>"A system that cannot imagine the consequences of its actions cannot be said to be intelligent."</em><br />
+（一个不能想象自己行动后果的系统，不能被称为智能。）</p>
+</blockquote>
+<h3 id="14-world-model">1.4 World Model 的价值定位</h3>
+<p>World Model 在具身智能中的角色定位：</p>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>训练加速器</strong></td>
+<td>用想象 rollout 替代真实交互，加速策略训练（model-based RL）</td>
+</tr>
+<tr>
+<td><strong>规划引擎</strong></td>
+<td>在想象中搜索最优动作序列，实现前瞻性决策</td>
+</tr>
+<tr>
+<td><strong>环境生成器</strong></td>
+<td>生成训练环境，解决数据稀缺问题（如 Genie 生成可玩 2D 世界）</td>
+</tr>
+<tr>
+<td><strong>认知桥梁</strong></td>
+<td>从感知决策走向认知推理的关键一步，让机器理解"世界如何运作"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_1">二、技术路线：四条主流路径</h2>
+<h3 id="21">2.1 总览</h3>
+<pre><code>                    World Model 技术路线
+                         │
+        ┌────────┬───────┼───────┬────────┐
+        ▼        ▼       ▼       ▼        ▼
+    Latent    JEPA    Diffusion  自回归    物理
+    Dynamics  表征预测  扩散模型   序列建模  感知模型
+        │        │       │       │        │
+    DreamerV3  V-JEPA  DIAMOND  Sora     SymSim
+                I-JEPA  UniSim   Genie
+</code></pre>
+<h3 id="22-latent-dynamics-model">2.2 路线一：Latent Dynamics Model（潜在动力学模型）</h3>
+<p><strong>核心思想</strong>：在压缩的潜在空间（latent space）中建模状态的动态转移。</p>
+<ul>
+<li>编码器将观测映射到低维潜在状态 $z_t$</li>
+<li>转移模型预测 $z_{t+1} = f(z_t, a_t)$</li>
+<li>奖励模型预测 $r_t = g(z_t)$</li>
+<li>策略在潜在空间中训练，不需要像素级重建</li>
+</ul>
+<p><strong>代表工作</strong>：Dreamer 系列（DreamerV1/V2/V3）</p>
+<p><strong>优势</strong>：<br />
+- 计算效率高（潜在空间维度远低于像素空间）<br />
+- 训练稳定，经验证在多种 benchmark 上有效</p>
+<p><strong>劣势</strong>：<br />
+- 信息瓶颈：压缩可能丢失关键细节<br />
+- 表征学习质量决定上限</p>
+<h3 id="23-joint-embedding-predictive-architecturejepa">2.3 路线二：Joint-Embedding Predictive Architecture（JEPA，表征预测）</h3>
+<p><strong>核心思想</strong>（LeCun 提出）：<strong>在表征空间而非像素空间做预测</strong>，避免生成模型重建像素的浪费。</p>
+<ul>
+<li>两个编码器分别处理 context 和 target（非对称架构）</li>
+<li>预测目标：$\hat{z}<em>{future} = f(z</em>{context})$，其中 $z$ 是表征而非像素</li>
+<li>不需要重建输入，只学抽象的"世界知识"</li>
+</ul>
+<p><strong>代表工作</strong>：I-JEPA（2023）、V-JEPA（2024）、V-JEPA 2.0（2025）</p>
+<p><strong>优势</strong>：<br />
+- 避免了生成模型的"重建偏差"（generative gap）<br />
+- 不浪费模型容量在无关细节（如精确纹理）上<br />
+- 更好地捕捉抽象因果关系</p>
+<p><strong>劣势</strong>：<br />
+- 表征质量难以评估（没有像素级 ground truth 可以比较）<br />
+- 当前在机器人控制任务上的验证尚不充分</p>
+<h3 id="24-diffusion-world-model">2.4 路线三：Diffusion World Model（扩散世界模型）</h3>
+<p><strong>核心思想</strong>：用扩散模型（Diffusion Model）作为 world model，生成像素级的未来状态预测。</p>
+<ul>
+<li>条件扩散模型：给定当前观测和动作，去噪生成未来画面</li>
+<li>生成质量高，物理细节丰富</li>
+</ul>
+<p><strong>代表工作</strong>：DIAMOND（2024）、UniSim（2023）</p>
+<p><strong>优势</strong>：<br />
+- 生成保真度高，物理细节（光影、纹理）保留好<br />
+- 可以直接在像素空间做想象 rollout，无需训练解码器</p>
+<p><strong>劣势</strong>：<br />
+- <strong>推理速度慢</strong>——扩散模型需要多步去噪，难以满足机器人实时控制频率（10-50Hz）<br />
+- 仍然存在"画"出合理但不物理正确的画面的问题</p>
+<h3 id="25-autoregressive-video-model">2.5 路线四：Autoregressive Video Model（自回归视频模型）</h3>
+<p><strong>核心思想</strong>：将视频当作 token 序列，用自回归方式逐帧预测。</p>
+<ul>
+<li>视频分 patch → tokenize → 自回归生成（类似 GPT 生成文本）</li>
+<li>可以是"视频生成模型"，也被视为隐式的世界模拟器</li>
+</ul>
+<p><strong>代表工作</strong>：Sora（OpenAI, 2024）、Genie / Genie 2（DeepMind, 2023/2024）</p>
+<p><strong>优势</strong>：<br />
+- 架构统一（和 LLM 相同的 Transformer + 自回归范式），可利用 scaling 优势<br />
+- 生成长序列能力强<br />
+- Genie 证明可以从无标注视频中自动学习动作表征</p>
+<p><strong>劣势</strong>：<br />
+- <strong>误差累积严重</strong>——自回归生成的错误会逐步放大，长序列质量退化快<br />
+- 推理速度随序列长度线性增长<br />
+- Sora 式的纯视频生成不是真正的交互式世界模型（没有动作条件）</p>
+<h3 id="26-physics-informed-neural-world-model">2.6 路线五：Physics-Informed Neural World Model（物理感知神经世界模型）</h3>
+<p><strong>核心思想</strong>：将物理方程/约束嵌入神经网络中，保证预测满足物理规律。</p>
+<ul>
+<li>在损失函数中加入物理约束（如能量守恒、碰撞约束）</li>
+<li>或使用可微分物理引擎作为网络组件</li>
+</ul>
+<p><strong>代表方向</strong>：Neural-Symbolic Hybrid Models</p>
+<p><strong>优势</strong>：<br />
+- 物理一致性更好，不会"幻想"出违反物理的画面<br />
+- 样本效率更高（物理先验减少了需要学习的数据量）</p>
+<p><strong>劣势</strong>：<br />
+- 建模复杂开放场景受限（难以写出所有物理约束）<br />
+- 与大规模数据驱动方法的融合仍在探索中</p>
+<h3 id="27">2.7 路线对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th style="text-align: center;">Latent Dynamics</th>
+<th style="text-align: center;">JEPA</th>
+<th style="text-align: center;">Diffusion</th>
+<th style="text-align: center;">自回归</th>
+<th style="text-align: center;">物理感知</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>计算效率</strong></td>
+<td style="text-align: center;">高</td>
+<td style="text-align: center;">高</td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">中</td>
+</tr>
+<tr>
+<td><strong>生成质量</strong></td>
+<td style="text-align: center;">低（潜在空间）</td>
+<td style="text-align: center;">中（表征空间）</td>
+<td style="text-align: center;">高</td>
+<td style="text-align: center;">高</td>
+<td style="text-align: center;">中-高</td>
+</tr>
+<tr>
+<td><strong>物理一致性</strong></td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">高</td>
+</tr>
+<tr>
+<td><strong>长时序能力</strong></td>
+<td style="text-align: center;">中（有专门优化）</td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">中</td>
+</tr>
+<tr>
+<td><strong>成熟度</strong></td>
+<td style="text-align: center;">高（DreamerV3）</td>
+<td style="text-align: center;">中（V-JEPA 2.0）</td>
+<td style="text-align: center;">低-中</td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">低</td>
+</tr>
+<tr>
+<td><strong>适合场景</strong></td>
+<td style="text-align: center;">Model-based RL</td>
+<td style="text-align: center;">表征学习</td>
+<td style="text-align: center;">视觉丰富场景</td>
+<td style="text-align: center;">视频生成/环境</td>
+<td style="text-align: center;">结构化场景</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">三、三阶段演进</h2>
+<p>World Model 在具身智能中的应用正在经历三个阶段的演进：</p>
+<h3 id="stage-12022-2023">Stage 1：视频预测模型（2022-2023）</h3>
+<ul>
+<li><strong>目标</strong>：给定当前画面（+动作），预测未来视频帧</li>
+<li><strong>代表</strong>：GAIA-1 (Waymo)、Sora (OpenAI)</li>
+<li><strong>特征</strong>：只是"看"的模拟，没有交互性</li>
+<li><strong>局限</strong>：物理一致性不足，不能用于训练策略</li>
+</ul>
+<h3 id="stage-22023-2024">Stage 2：交互式世界模型（2023-2024）</h3>
+<ul>
+<li><strong>目标</strong>：在潜在空间中建模动态，支持动作条件下的状态转移预测</li>
+<li><strong>代表</strong>：DreamerV3、Genie、UniSim</li>
+<li><strong>特征</strong>：支持条件生成，可用于 model-based RL</li>
+<li><strong>局限</strong>：长时序误差累积，模拟精度有限</li>
+</ul>
+<h3 id="stage-32024-">Stage 3：自主规划型世界模型（2024-未来）</h3>
+<ul>
+<li><strong>目标</strong>：World Model + LLM 混合架构，实现复杂长程任务的自主规划</li>
+<li><strong>代表方向</strong>：Google DeepMind 通用机器人 world model、清华 RoboWorld</li>
+<li><strong>核心架构</strong>：<br />
+<code>LLM/VLM（推理引擎）          World Model（想象力引擎）
+      │                              │
+      │   "把杯子拿起来"              │   想象：手臂抬起 →
+      │   → 拆解为子任务             │   杯子被抓取 →
+      │   → 推断中间状态             │   水可能洒出
+      │                              │
+      +------------ 协同 ------------+</code></li>
+</ul>
+<hr />
+<h2 id="_3">四、里程碑工作详解</h2>
+<h3 id="41-dreamerv3202301">4.1 DreamerV3（2023.01）</h3>
+<p><strong>论文</strong>：<em>Mastering Diverse Domains Through World Models</em> — Dan Hafner et al.<br />
+<strong>链接</strong>：https://arxiv.org/abs/2301.04104</p>
+<p><strong>核心贡献</strong>：<br />
+- <strong>首个单一超参数配置</strong>在 Atari 100k、DMLab、Minecraft 等多领域达到人类水平的 world model 算法<br />
+- 验证了 latent dynamics model-based RL 的通用性</p>
+<p><strong>技术要点</strong>：<br />
+- 在潜在空间中学习世界模型（recurrent state-space model, RSSM）<br />
+- 用想象 rollout 训练 actor-critic 策略<br />
+- 关键创新：对称 KL 正则化，使模型在不同规模的任务上保持稳定</p>
+<p><strong>意义</strong>：Model-based RL 领域的标杆工作，证明世界模型路线的可行性。</p>
+<hr />
+<h3 id="42-i-jepa202301">4.2 I-JEPA（2023.01）</h3>
+<p><strong>论文</strong>：<em>Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture</em> — Yann LeCun et al. (Meta)<br />
+<strong>链接</strong>：https://arxiv.org/abs/2301.08243</p>
+<p><strong>核心贡献</strong>：<br />
+- 提出"在表征空间而非像素空间做预测"的核心范式<br />
+- 论证了这比生成式模型（MAE、扩散模型等）更适合学习抽象世界知识</p>
+<p><strong>技术要点</strong>：<br />
+- 两个独立的编码器分别编码 context block 和 target block<br />
+- 预测目标：用 context 的表征预测 target 的表征<br />
+- 使用 VICReg 风格的 non-contrastive objective 防止表征坍缩</p>
+<p><strong>意义</strong>：LeCun 对"什么是正确的世界模型学习范式"的回答，影响了后续整个研究方向。</p>
+<hr />
+<h3 id="43-unisim202305">4.3 UniSim（2023.05）</h3>
+<p><strong>论文</strong>：<em>Learning Interactive Real-World Simulators</em> — Google Research<br />
+<strong>链接</strong>：https://arxiv.org/abs/2305.12920</p>
+<p><strong>核心贡献</strong>：<br />
+- <strong>统一生成和仿真</strong>——同一框架既做视频生成，又做条件模拟<br />
+- 从真实交互数据中学习可交互模拟器，支持机器人操控和导航任务的想象 rollout</p>
+<p><strong>技术要点</strong>：<br />
+- 扩散模型架构<br />
+- 统一处理真实数据和仿真数据<br />
+- 支持动作条件生成：给定当前观测 + 动作 → 预测下一帧</p>
+<p><strong>意义</strong>："世界模型用于机器人"的关键早期工作，证明了真实数据驱动的世界模型对机器人任务的迁移效果。</p>
+<hr />
+<h3 id="44-genie202312">4.4 Genie（2023.12）</h3>
+<p><strong>论文</strong>：<em>Genie: Generative Interactive Environments</em> — DeepMind<br />
+<strong>链接</strong>：https://arxiv.org/abs/2312.11435</p>
+<p><strong>核心贡献</strong>：<br />
+- 从 <strong>20 万小时无标注视频</strong>中自动学到动作表征<br />
+- 生成可交互的 2D 环境，开创了"无监督动作建模"范式</p>
+<p><strong>技术要点</strong>：<br />
+- 三个组件：视频 VAE（帧压缩）、动态模型（帧间转换）、潜在动作模型（从视频中提取隐动作）<br />
+- 不需要知道视频中的人在按什么键，模型自己学<br />
+- 生成的环境可以用学到的隐动作控制</p>
+<p><strong>意义</strong>：展示了从纯视频数据中同时学习世界模型和动作表征的可能性。</p>
+<hr />
+<h3 id="45-v-jepa202401">4.5 V-JEPA（2024.01）</h3>
+<p><strong>论文</strong>：<em>Video Joint-Embedding Predictive Architecture</em> — Meta<br />
+<strong>链接</strong>：https://arxiv.org/abs/2401.13841</p>
+<p><strong>核心贡献</strong>：<br />
+- 将 JEPA 从图像扩展到视频<br />
+- 证明不做像素重建也能学到强视觉世界模型</p>
+<p><strong>技术要点</strong>：<br />
+- 视频输入 → 编码为表征 → 在表征空间预测未来帧的表征<br />
+- 不需要生成像素，避免了扩散模型/自回归模型的高计算开销<br />
+- 在动作识别、视频理解 benchmark 上与有监督方法竞争力相当</p>
+<hr />
+<h3 id="46-sora202402">4.6 Sora（2024.02）</h3>
+<p><strong>论文</strong>：<em>Video Generation Models as World Simulators</em> — OpenAI<br />
+<strong>链接</strong>：https://arxiv.org/abs/2402.17177</p>
+<p><strong>核心贡献</strong>：<br />
+- 首次正式提出 <strong>"视频生成模型即世界模拟器"</strong> 的论断<br />
+- 展示了大规模视频模型涌现出的物理理解能力</p>
+<p><strong>技术要点</strong>：<br />
+- DiT（Diffusion Transformer）架构，将视频处理为时空 patch<br />
+- 扩大规模后涌现出 3D 一致性、长时序连贯性、物体永久性等能力<br />
+- 可以模拟 Minecraft 等数字环境</p>
+<p><strong>争议</strong>：<br />
+- 社区对"到底算不算真正的世界模型"存在分歧<br />
+- 生成的视频经常违反物理（穿模、反重力）<br />
+- 不支持动作条件输入，不能用于训练策略<br />
+- 本质上更像强大的视频生成器，而非交互式世界模型</p>
+<p><strong>意义</strong>：引爆了整个 AI 社区对 world model 的讨论和关注，将这个概念从小众 RL 领域带入主流视野。</p>
+<hr />
+<h3 id="47-diamond2024">4.7 DIAMOND（2024）</h3>
+<p><strong>论文</strong>：<em>DIAMOND: Diffusion World Model for Model-Based RL</em> — UCL<br />
+<strong>方向</strong>：在 Minecraft 上用扩散模型做 world model</p>
+<p><strong>核心贡献</strong>：<br />
+- 首次用扩散模型作为 world model 做 model-based RL，取得优异成绩<br />
+- 开辟了"扩散世界模型"这条新路线</p>
+<p><strong>技术要点</strong>：<br />
+- 扩散模型替代传统的 latent dynamics model<br />
+- 在想象 rollout 中生成像素级未来帧<br />
+- 策略在这些生成的帧上训练</p>
+<p><strong>意义</strong>：验证了扩散模型作为 world model 的可行性，但实时性挑战明显。</p>
+<hr />
+<h3 id="48-genie-2202412">4.8 Genie 2（2024.12）</h3>
+<p><strong>论文</strong>：<em>Genie 2: A Large-Scale Foundation World Model</em> — DeepMind<br />
+<strong>链接</strong>：https://arxiv.org/abs/2412.06214</p>
+<p><strong>核心贡献</strong>：<br />
+- 从<strong>单张图片</strong>生成多样化的可交互 2D 环境<br />
+- 大规模基础世界模型（Foundation World Model）的概念验证</p>
+<p><strong>意义</strong>：朝"世界模型即训练场"迈进一步——未来可以用 Genie 2 生成无限多样的训练环境来训练 embodied agent。</p>
+<hr />
+<h3 id="49-v-jepa-20202501">4.9 V-JEPA 2.0（2025.01）</h3>
+<p><strong>论文</strong>：Meta<br />
+<strong>链接</strong>：https://arxiv.org/abs/2501.06814</p>
+<p><strong>核心贡献</strong>：<br />
+- 将 JEPA 范式推向更长时序和更复杂的具身推理任务<br />
+- Meta 在 world model 路线上的持续深耕</p>
+<hr />
+<h3 id="410">4.10 里程碑时间线</h3>
+<pre><code>2023.01  I-JEPA          LeCun 提出表征预测范式
+   │
+2023.01  DreamerV3       首个跨领域 human-level 的 world model RL
+   │
+2023.05  UniSim          统一生成与仿真，真实数据驱动的机器人 world model
+   │
+2023.12  Genie           无标注视频 → 可交互 2D 环境
+   │
+2024.01  V-JEPA          JEPA 扩展到视频，表征预测验证
+   │
+2024.02  Sora            &quot;视频生成即世界模拟器&quot;，引爆讨论
+   │
+2024.??  DIAMOND         扩散模型做 world model，新路线验证
+   │
+2024.11  π₀ (Physical Intelligence)  流匹配通用机器人策略
+   │
+2024.12  Genie 2         基础世界模型，单图生成可交互环境
+   │
+2025.01  V-JEPA 2.0      长时序具身推理
+   │
+2025     Dreamer-Long    解决长时序误差累积
+         Hierarchical WM 分层世界模型
+         SimWorld Workshop (ICRA 2025)  学术界聚焦
+</code></pre>
+<hr />
+<h2 id="_4">五、当前面临的核心挑战</h2>
+<h3 id="51-compound-error">5.1 长时序误差累积（Compound Error）</h3>
+<p>这是 model-based RL 的<strong>根本性瓶颈</strong>。World Model 想象 10 步还可以，想象 100 步就崩溃——预测误差随步数指数级放大。</p>
+<p><strong>2025 年的应对方案</strong>：<br />
+- <strong>分层世界模型</strong>（Hierarchical WM）：高层做抽象长期规划，低层做短程精确预测<br />
+  - 参考：<a href="https://arxiv.org/abs/2505.00102">Hierarchical World Models for Compositional Long-Horizon Robot Planning</a><br />
+- <strong>周期性接地</strong>（Periodic Grounding）：定期用真实观测修正想象状态<br />
+- <strong>Dreamer-Long</strong>：循环状态重置 + 时域感知训练<br />
+  - 参考：<a href="https://arxiv.org/abs/2504.01123">Dreamer-Long: Scaling World Models to Long-Horizon Robotic Control</a></p>
+<h3 id="52">5.2 物理一致性</h3>
+<p>视频模型经常"画"出违反物理的画面——物体穿模、反重力、形变异常。</p>
+<p><strong>根本原因</strong>：模型是统计模式匹配，不是物理引擎。它学会了"水看起来是什么样的"，但没有学会"水遵循流体力学方程"。</p>
+<p><strong>解决方向</strong>：<br />
+- 将物理方程嵌入可微分计算图<br />
+- 物理先验 + 数据驱动的混合方法<br />
+- 用物理仿真数据做对抗训练</p>
+<h3 id="53-sim-to-real-gap">5.3 Sim-to-Real Gap</h3>
+<p>仿真环境里表现好 ≠ 真实世界能用。摩擦力、材质形变、光照变化、传感器噪声等细节在仿真和现实中差异巨大。</p>
+<p><strong>2025 年的进展</strong>：<br />
+- <a href="https://arxiv.org/abs/2502.01868">Bridging the Sim-to-Real Gap for Long-Horizon Manipulation with World Models</a><br />
+- <a href="https://arxiv.org/abs/2503.14210">RoboCasa</a>：专门为长时序家庭任务设计的大规模仿真框架</p>
+<h3 id="54">5.4 实时推理效率</h3>
+<p>机器人控制频率要求 10-50Hz，但扩散模型需要多步去噪，推理速度跟不上。</p>
+<p><strong>解决方向</strong>：<br />
+- 蒸馏：用扩散模型生成训练数据，蒸馏成更快的自回归或 latent model<br />
+- 潜在空间操作：不在像素空间做扩散，在低维潜在空间做<br />
+- 专用芯片加速</p>
+<h3 id="55">5.5 数据瓶颈</h3>
+<p>Scaling laws 研究表明，没有物理真实数据的支撑，单纯扩大模型收益递减。互联网视频虽然丰富，但缺乏动作标注和物理交互信息。</p>
+<hr />
+<h2 id="_5">六、未来发展方向</h2>
+<h3 id="61-world-model-llm">6.1 World Model + LLM 混合架构（最被看好的方向）</h3>
+<pre><code>┌─────────────────────────────────────────────────┐
+│                  混合架构                         │
+│                                                   │
+│  ┌─────────────┐      ┌─────────────────────┐    │
+│  │ LLM/VLM     │      │ World Model          │    │
+│  │ (推理引擎)   │◄────►│ (想象力引擎)         │    │
+│  │             │      │                     │    │
+│  │ · 任务分解   │      │ · 环境模拟          │    │
+│  │ · 因果推理   │      │ · 动作评估          │    │
+│  │ · 高层规划   │      │ · 状态预测          │    │
+│  └─────────────┘      └─────────────────────┘    │
+│         │                       │                │
+│         └───────────┬───────────┘                │
+│                     ▼                            │
+│              策略网络（Policy）                    │
+│              输出：机器人动作                       │
+└─────────────────────────────────────────────────┘
+</code></pre>
+<ul>
+<li><strong>LLM 负责</strong>：高层规划、因果推理、任务分解、常识判断</li>
+<li><strong>World Model 负责</strong>：环境模拟、低层预测、动作后果评估</li>
+<li>两者协同才能处理需要<strong>长期推理 + 物理交互</strong>的复杂任务</li>
+</ul>
+<h3 id="62-hierarchical-world-model">6.2 分层世界模型（Hierarchical World Model）</h3>
+<p>解决长时序误差累积最有希望的方向：</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>时间尺度</th>
+<th>空间粒度</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>高层</td>
+<td>分钟级</td>
+<td>语义级别</td>
+<td>"做完这一步，房间会变成什么样"</td>
+</tr>
+<tr>
+<td>中层</td>
+<td>秒级</td>
+<td>物体级别</td>
+<td>"杯子被移动到了桌子右侧"</td>
+</tr>
+<tr>
+<td>低层</td>
+<td>100ms 级</td>
+<td>像素/关节级别</td>
+<td>"接下来 1 秒的手指轨迹"</td>
+</tr>
+</tbody>
+</table>
+<p>高层做抽象规划，低层做精确预测。每一层只负责短时序预测，误差可控。</p>
+<h3 id="63">6.3 互联网视频大规模预训练 → 机器人迁移</h3>
+<p>类比 NLP 中"预训练 + 微调"的范式迁移到具身领域：</p>
+<ol>
+<li><strong>预训练</strong>：用互联网海量视频训练 world model（学习"世界如何运作"的通用知识）</li>
+<li><strong>微调</strong>：用机器人交互数据微调（学习"我的身体如何与世界交互"）</li>
+</ol>
+<p>关键挑战：互联网视频缺乏动作标注和力觉信息。</p>
+<h3 id="64">6.4 多模态世界模型</h3>
+<p>当前的 world model 主要依赖视觉，但真正的具身智能需要：</p>
+<table>
+<thead>
+<tr>
+<th>模态</th>
+<th>信息</th>
+<th>当前状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>视觉</td>
+<td>物体位置、形状、颜色</td>
+<td>成熟</td>
+</tr>
+<tr>
+<td>触觉/力觉</td>
+<td>抓取力度、材质硬度</td>
+<td>早期</td>
+</tr>
+<tr>
+<td>本体感觉</td>
+<td>关节角度、身体姿态</td>
+<td>中期</td>
+</tr>
+<tr>
+<td>听觉</td>
+<td>碰撞声音、环境反馈</td>
+<td>早期</td>
+</tr>
+</tbody>
+</table>
+<p>多模态融合才能建立完整的世界模型。</p>
+<h3 id="65">6.5 评测体系的建设</h3>
+<p>当前缺乏统一、可信的 world model 评测标准。社区正在推动：<br />
+- 物理一致性评测（如物体碰撞、重力、流体）<br />
+- 长时序连贯性评测<br />
+- 机器人任务 transfer 效果评测<br />
+- ICRA 2025 SimWorld Workshop 等会议专门讨论此问题</p>
+<hr />
+<h2 id="_6">七、产业进展与落地时间线</h2>
+<h3 id="71">7.1 主要玩家</h3>
+<table>
+<thead>
+<tr>
+<th>公司/机构</th>
+<th>方向</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google DeepMind</td>
+<td>通用机器人 world model</td>
+<td>研究领先，demo 阶段</td>
+</tr>
+<tr>
+<td>Meta / LeCun</td>
+<td>JEPA 路线，表征预测</td>
+<td>V-JEPA 2.0 持续迭代</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>Sora（视频世界模型）</td>
+<td>视频生成能力强，但非交互式</td>
+</tr>
+<tr>
+<td>NVIDIA</td>
+<td>Isaac Sim + 物理 world model</td>
+<td>工具链成熟，合成数据生成领先</td>
+</tr>
+<tr>
+<td>Tesla</td>
+<td>端到端神经网络驾驶</td>
+<td>已上车，更接近行为克隆而非显式 world model</td>
+</tr>
+<tr>
+<td>Physical Intelligence</td>
+<td>π₀（通用机器人策略）</td>
+<td>VLA 模型加速落地</td>
+</tr>
+<tr>
+<td>Figure / 1X</td>
+<td>通用人形机器人</td>
+<td>大模型 + world model 结合</td>
+</tr>
+<tr>
+<td>清华 / 智源</td>
+<td>RoboWorld 等框架</td>
+<td>学术界有突破性工作</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 预期落地时间线</h3>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>预期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025-2026</td>
+<td>受控场景（工厂、仓库）中，world model 辅助的机器人策略开始商用</td>
+</tr>
+<tr>
+<td>2026-2028</td>
+<td>家庭场景中的简单任务（整理、搬运），world model + LLM 混合架构成熟</td>
+</tr>
+<tr>
+<td>2028+</td>
+<td>通用家庭服务机器人，具备复杂长程任务能力</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">八、总结</h2>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>判断</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>World Model 是不是正确的方向？</td>
+<td>是，业界共识度很高，但具体形态还在演进</td>
+</tr>
+<tr>
+<td>当前最大的瓶颈是什么？</td>
+<td>长时序误差累积 + 物理一致性 + Sim-to-Real Gap，三者互相耦合</td>
+</tr>
+<tr>
+<td>最终形态是什么？</td>
+<td>大概率是<strong>分层混合架构</strong>：LLM 做推理，分层 world model 做模拟，物理引擎做兜底</td>
+</tr>
+<tr>
+<td>距离真实机器人可靠运行还有多远？</td>
+<td>受控场景 3-5 年，家庭场景 5-8 年</td>
+</tr>
+<tr>
+<td>对从业者意味着什么？</td>
+<td>这是通向通用具身智能最被看好的路线之一，但也最难，需要跨领域知识（RL、生成模型、机器人学、物理仿真）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">推荐学习路径</h3>
+<pre><code>I-JEPA    理解&quot;为什么不在像素空间预测&quot;
+  ↓
+DreamerV3 理解 model-based RL 的完整流程
+  ↓
+UniSim    理解&quot;真实数据 → 世界模型 → 机器人&quot;
+  ↓
+DIAMOND   理解扩散模型作为 world model
+  ↓
+Genie/Genie 2  理解环境生成
+  ↓
+π₀ / RT-X 理解通用机器人策略
+</code></pre>
+<h3 id="_9">参考文献</h3>
+<ol>
+<li>DreamerV3: https://arxiv.org/abs/2301.04104</li>
+<li>I-JEPA: https://arxiv.org/abs/2301.08243</li>
+<li>V-JEPA: https://arxiv.org/abs/2401.13841</li>
+<li>V-JEPA 2.0: https://arxiv.org/abs/2501.06814</li>
+<li>Sora: https://arxiv.org/abs/2402.17177</li>
+<li>UniSim: https://arxiv.org/abs/2305.12920</li>
+<li>Genie: https://arxiv.org/abs/2312.11435</li>
+<li>Genie 2: https://arxiv.org/abs/2412.06214</li>
+<li>π₀: https://arxiv.org/abs/2410.24165</li>
+<li>World Models for Embodied AI Survey: https://arxiv.org/abs/2409.11236</li>
+<li>Dreamer-Long: https://arxiv.org/abs/2504.01123</li>
+<li>Hierarchical World Models: https://arxiv.org/abs/2505.00102</li>
+<li>Bridging Sim-to-Real Gap: https://arxiv.org/abs/2502.01868</li>
+<li>RoboCasa: https://arxiv.org/abs/2503.14210</li>
+</ol></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>

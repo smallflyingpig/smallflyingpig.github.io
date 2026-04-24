@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DPO LOSS公式完整解读 - Jiguo Li</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/main.css">
+<link rel="stylesheet" href="../../css/blog.css">
+<link rel="shortcut icon" href="../../jiguo.ico">
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\(', '\)']],
+    displayMath: [['$$', '$$'], ['\[', '\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* Table styles for markdown tables */
+.blog-detail-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.blog-detail-body table th,
+.blog-detail-body table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+.blog-detail-body table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.blog-detail-body table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.blog-detail-body table tr:hover {
+  background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="../../index.html">Home</a>
+  <a href="../index.html" class="active">Blog</a>
+  <a href="../../index_ch.html">中文版</a>
+</nav>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
+      <h1 class="sidebar-name">Jiguo Li</h1>
+      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <div class="profile-links">
+        <a href="../../paper/jiguo_cv.pdf" class="profile-link">CV</a>
+        <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
+        <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="main-content-wrapper">
+    <main class="main-content">
+      <article class="blog-detail-content">
+        <header class="blog-detail-header">
+          <h1 class="blog-detail-title">DPO LOSS公式完整解读</h1>
+          <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
+        </header>
+        <div class="blog-detail-body"><h1 id="dpo-loss">DPO LOSS公式完整解读</h1>
+<h2 id="_1">一、公式</h2>
+<p>$$\mathcal{L}<em>{DPO} = -\mathbb{E}</em>{(x, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)} \right) \right]$$</p>
+<h2 id="_2">二、符号说明</h2>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$x$</td>
+<td>用户输入（prompt）</td>
+</tr>
+<tr>
+<td>$y_w$</td>
+<td>偏好回复（chosen / winner）</td>
+</tr>
+<tr>
+<td>$y_l$</td>
+<td>非偏好回复（rejected / loser）</td>
+</tr>
+<tr>
+<td>$\pi_\theta$</td>
+<td>当前策略（正在优化的模型）</td>
+</tr>
+<tr>
+<td>$\pi_{ref}$</td>
+<td>参考策略（SFT 模型，固定不变）</td>
+</tr>
+<tr>
+<td>$\sigma(\cdot)$</td>
+<td>Sigmoid 函数 $\frac{1}{1+e^{-x}}$</td>
+</tr>
+<tr>
+<td>$\beta$</td>
+<td>温度参数，控制 KL 约束强度</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">三、直观理解</h2>
+<h3 id="_4">简化为三个关键部分</h3>
+<pre><code>损失 = -log(sigmoid( 偏好回复的提升  -  非偏好回复的提升 ))
+                         ↑                      ↑
+                    想让它大                想让它小
+</code></pre>
+<h3 id="_5">符号含义对照</h3>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>直观含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$\log \frac{\pi_\theta(y_w)}{\pi_{ref}(y_w)}$</td>
+<td>偏好回复的概率提升了多少</td>
+</tr>
+<tr>
+<td>$\log \frac{\pi_\theta(y_l)}{\pi_{ref}(y_l)}$</td>
+<td>非偏好回复的概率提升了多少</td>
+</tr>
+<tr>
+<td>两者相减</td>
+<td>偏好回复比非偏好回复"好多少"</td>
+</tr>
+<tr>
+<td>$\sigma(\cdot)$</td>
+<td>把差异映射到 [0,1] 区间</td>
+</tr>
+<tr>
+<td>$-\log(\cdot)$</td>
+<td>让括号内越大越好</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">优化目标</h3>
+<p><strong>最小化损失 = 最大化括号内值 = 让偏好回复概率 ↑，非偏好回复概率 ↓</strong></p>
+<pre><code>初始状态:
+  P(偏好回复) = 30%     P(非偏好回复) = 50%
+
+优化后:
+  P(偏好回复) = 50% ↑   P(非偏好回复) = 30% ↓
+</code></pre>
+<h2 id="_7">四、具体数值例子</h2>
+<p>假设参考模型 $\pi_{ref}$ 和当前模型 $\pi_\theta$ 对两个回复的概率：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>$\pi_{ref}$</th>
+<th>$\pi_\theta$ (初始)</th>
+<th>$\pi_\theta$ (优化后)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$y_w$ (偏好)</td>
+<td>0.3</td>
+<td>0.3</td>
+<td><strong>0.5</strong> ↑</td>
+</tr>
+<tr>
+<td>$y_l$ (非偏好)</td>
+<td>0.5</td>
+<td>0.5</td>
+<td><strong>0.3</strong> ↓</td>
+</tr>
+</tbody>
+</table>
+<p>计算 log ratio：</p>
+<ul>
+<li>初始：$\log\frac{\pi_\theta(y_w)}{\pi_{ref}(y_w)} = \log\frac{0.3}{0.3} = 0$</li>
+<li>初始：$\log\frac{\pi_\theta(y_l)}{\pi_{ref}(y_l)} = \log\frac{0.5}{0.5} = 0$</li>
+<li>优化后：$\log\frac{\pi_\theta(y_w)}{\pi_{ref}(y_w)} = \log\frac{0.5}{0.3} \approx 0.51$</li>
+<li>优化后：$\log\frac{\pi_\theta(y_l)}{\pi_{ref}(y_l)} = \log\frac{0.3}{0.5} \approx -0.51$</li>
+</ul>
+<p>损失变化：</p>
+<ul>
+<li>初始：$-\log\sigma(0 - 0) = -\log(0.5) \approx 0.69$</li>
+<li>优化后：$-\log\sigma(0.51 - (-0.51)) = -\log\sigma(1.02) \approx 0.26$ ✓ 损失降低</li>
+</ul>
+<h2 id="_8">五、β 的作用</h2>
+<table>
+<thead>
+<tr>
+<th>β 值</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>β 大</td>
+<td>越保守，模型变化小（强 KL 约束）</td>
+</tr>
+<tr>
+<td>β 小</td>
+<td>越激进，模型可能过拟合偏好数据</td>
+</tr>
+<tr>
+<td>典型值</td>
+<td>0.1 ~ 0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_9">六、完整推导过程</h2>
+<h3 id="step-1-kl">Step 1: KL 约束下的最优策略</h3>
+<p><strong>原始优化目标：</strong></p>
+<p>$$\max_\pi \mathbb{E}<em>{x \sim \mathcal{D}, y \sim \pi(\cdot|x)}[r(x,y)] - \beta \cdot \mathbb{E}</em>{x \sim \mathcal{D}}[\text{KL}(\pi(\cdot|x) || \pi_{ref}(\cdot|x))]$$</p>
+<p><strong>KL 散度定义：</strong></p>
+<p>$$\text{KL}(\pi || \pi_{ref}) = \sum_y \pi(y|x) \log \frac{\pi(y|x)}{\pi_{ref}(y|x)}$$</p>
+<p><strong>展开 KL 项：</strong></p>
+<p>注意：$y$ 是从 $\pi(\cdot|x)$ 采样的，所以：</p>
+<p>$$\sum_y \pi(y|x) \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} = \mathbb{E}<em>{y \sim \pi(\cdot|x)}\left[\log \frac{\pi(y|x)}{\pi</em>{ref}(y|x)}\right]$$</p>
+<p><strong>更严谨的优化目标写法：</strong></p>
+<p>$$\max_\pi \mathbb{E}<em>{x \sim \mathcal{D}} \left[ \mathbb{E}</em>{y \sim \pi(\cdot|x)}[r(x,y)] - \beta \cdot \text{KL}(\pi(\cdot|x) || \pi_{ref}(\cdot|x)) \right]$$</p>
+<p>展开 KL：</p>
+<p>$$= \max_\pi \mathbb{E}<em>{x \sim \mathcal{D}} \left[ \mathbb{E}</em>{y \sim \pi}[r(x,y)] - \beta \cdot \mathbb{E}<em>{y \sim \pi}\left[\log \frac{\pi(y|x)}{\pi</em>{ref}(y|x)}\right] \right]$$</p>
+<p>合并期望：</p>
+<p>$$= \max_\pi \mathbb{E}<em>{x \sim \mathcal{D}, y \sim \pi} \left[ r(x,y) - \beta \log \frac{\pi(y|x)}{\pi</em>{ref}(y|x)} \right]$$</p>
+<h3 id="step-2">Step 2: 用拉格朗日乘子法求最优解</h3>
+<p>引入拉格朗日乘子 $\lambda(x)$ 保证 $\sum_y \pi(y|x) = 1$：</p>
+<p>$$\mathcal{L} = \sum_y \pi(y|x) \left[ r(x,y) - \beta \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} \right] + \lambda(x) \left( \sum_y \pi(y|x) - 1 \right)$$</p>
+<p>对 $\pi(y|x)$ 求偏导：</p>
+<p>$$\frac{\partial \mathcal{L}}{\partial \pi(y|x)} = r(x,y) - \beta \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} - \beta + \lambda(x) = 0$$</p>
+<p>解得：</p>
+<p>$$\log \frac{\pi(y|x)}{\pi_{ref}(y|x)} = \frac{r(x,y)}{\beta} + \frac{\lambda(x) - \beta}{\beta}$$</p>
+<p>$$\pi(y|x) = \pi_{ref}(y|x) \cdot e^{r(x,y)/\beta} \cdot e^{(\lambda(x) - \beta)/\beta}$$</p>
+<p>利用归一化条件 $\sum_y \pi(y|x) = 1$，设 $Z(x) = \sum_y \pi_{ref}(y|x) e^{r(x,y)/\beta}$：</p>
+<p>$$\boxed{\pi^*(y|x) = \frac{1}{Z(x)} \pi_{ref}(y|x) \cdot e^{r(x,y)/\beta}}$$</p>
+<h3 id="step-3">Step 3: 反解奖励函数</h3>
+<p>从最优策略表达式中反解奖励函数：</p>
+<p>$$r(x,y) = \beta \log \frac{\pi^*(y|x)}{\pi_{ref}(y|x)} + \beta \log Z(x)$$</p>
+<p><strong>关键洞察</strong>：$\beta \log Z(x)$ 只与 $x$ 有关，与 $y$ 无关，在 Bradley-Terry 模型中会消掉！</p>
+<h3 id="step-4-bradley-terry">Step 4: 代入 Bradley-Terry 模型</h3>
+<p>人类偏好概率：</p>
+<p>$$p(y_w \succ y_l | x) = \sigma(r(x, y_w) - r(x, y_l))$$</p>
+<p>代入隐式奖励（$Z(x)$ 项消掉）：</p>
+<p>$$p(y_w \succ y_l | x) = \sigma\left(\beta \log \frac{\pi(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi(y_l|x)}{\pi_{ref}(y_l|x)}\right)$$</p>
+<h3 id="step-5">Step 5: 最大似然估计</h3>
+<p>最大化偏好数据的对数似然：</p>
+<p>$$\mathcal{L}_{DPO} = -\mathbb{E}\left[\log p(y_w \succ y_l | x)\right]$$</p>
+<p>得到最终公式：</p>
+<p>$$\boxed{\mathcal{L}<em>{DPO} = -\mathbb{E}\left[\log \sigma\left(\beta \log \frac{\pi</em>\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}\right)\right]}$$</p>
+<h2 id="ppo">七、与 PPO 的联系</h2>
+<p>PPO 优化目标：</p>
+<p>$$\max_\pi \mathbb{E}[r(x,y)] - \beta \cdot \text{KL}(\pi || \pi_{ref})$$</p>
+<p>DPO 的 $\beta \log \frac{\pi}{\pi_{ref}}$ 正是这个 KL 约束下最优奖励函数的<strong>闭式解</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>PPO</th>
+<th>DPO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>奖励模型</td>
+<td>需要显式训练</td>
+<td>不需要（隐式）</td>
+</tr>
+<tr>
+<td>参考模型</td>
+<td>需要（KL 约束）</td>
+<td>需要（计算对数比率）</td>
+</tr>
+<tr>
+<td>价值模型</td>
+<td>需要（优势估计）</td>
+<td>不需要</td>
+</tr>
+<tr>
+<td>训练稳定性</td>
+<td>需要精细调参</td>
+<td>相对稳定</td>
+</tr>
+<tr>
+<td>计算开销</td>
+<td>高</td>
+<td>低</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_10">八、一句话总结</h2>
+<p><strong>DPO 通过对比"偏好回复的概率提升"和"非偏好回复的概率降低"，直接优化人类偏好，无需显式奖励模型。</strong></p></div>
+        <a href="../index.html" class="blog-back">← 返回博客列表</a>
+      </article>
+    </main>
+  </div>
+</div>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+</body>
+</html>
