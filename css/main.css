@@ -293,11 +293,16 @@ a:hover { text-decoration: underline; }
     left: auto;
     right: 10px;
   }
+
+  .sidebar:not(.collapsed) ~ .sidebar-toggle {
+    left: auto;
+    right: 10px;
+  }
   
   .sidebar.mobile-open ~ .sidebar-backdrop {
     display: block;
     position: fixed;
-    inset: 45px 0 0;
+    inset: 45px 0 0 min(320px, 85vw);
     padding: 0;
     border: 0;
     background: rgba(44, 62, 80, 0.32);
