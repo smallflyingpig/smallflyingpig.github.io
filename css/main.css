@@ -107,6 +107,8 @@ a:hover { text-decoration: underline; }
   color: white;
 }
 
+.sidebar-backdrop { display: none; }
+
 .sidebar.collapsed + .sidebar-toggle {
   left: 10px;
 }
@@ -272,23 +274,35 @@ a:hover { text-decoration: underline; }
   .top-nav a { font-size: 13px; padding: 6px 10px; }
   
   .sidebar {
-    width: 100%;
+    width: min(320px, 85vw);
     position: fixed;
     top: 45px;
     transform: translateX(-100%);
+    opacity: 0;
+    visibility: hidden;
   }
   
-  .sidebar:not(.collapsed) {
+  .sidebar.mobile-open {
     transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
   }
   
   .sidebar-toggle {
     top: 55px;
-    left: 10px;
+    left: auto;
+    right: 10px;
   }
   
-  .sidebar:not(.collapsed) ~ .sidebar-toggle {
-    left: calc(100% - 46px);
+  .sidebar.mobile-open ~ .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 45px 0 0;
+    padding: 0;
+    border: 0;
+    background: rgba(44, 62, 80, 0.32);
+    z-index: 90;
+    cursor: pointer;
   }
   
   .main-content-wrapper { margin-left: 0; }

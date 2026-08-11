@@ -45,7 +45,10 @@
     </ul>
   </aside>
 
-  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="sidebar-toggle" id="sidebarToggle" type="button"
+          aria-controls="sidebar" aria-expanded="false" aria-label="打开页面导航">☰</button>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" type="button"
+          aria-label="关闭页面导航" tabindex="-1"></button>
 
   <div class="main-content-wrapper">
     <main class="main-content">
@@ -169,12 +172,7 @@
   </div>
 </div>
 
-<script>
-function toggleSidebar() {
-  var sidebar = document.getElementById('sidebar');
-  sidebar.classList.toggle('collapsed');
-}
-</script>
+<script src="./js/sidebar.js"></script>
 
 </body>
 </html>
