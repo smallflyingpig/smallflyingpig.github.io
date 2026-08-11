@@ -243,11 +243,14 @@ a:hover { text-decoration: underline; }
 .pub-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .pub-card { background: var(--card-bg); padding: 12px 15px; border-radius: 5px; box-shadow: var(--shadow); }
 .pub-title { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+.pub-title a { color: inherit; }
+.pub-title a:hover { color: var(--accent); }
 .pub-authors { font-size: 13px; margin-bottom: 5px; }
 .pub-venue { display: inline-block; padding: 2px 5px; font-size: 10px; border-radius: 3px; margin-right: 5px; }
 .badge-ccf-a { background: #F4D03F; color: #333; }
 .badge-ccf-b { background: #BDC3C7; color: #333; }
 .badge-sci { background: #48C9B0; color: white; }
+.badge-award { background: #8E44AD; color: white; }
 
 /* Simple List */
 .simple-list { list-style: none; }
