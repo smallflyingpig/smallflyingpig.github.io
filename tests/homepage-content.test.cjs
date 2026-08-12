@@ -43,18 +43,16 @@ test('CV remains byte-for-byte unchanged', () => {
   assert.equal(digest, '211c1937f15d0c548f64f6e39fb29b030b3553dca64a7769732af1fabdc96b80');
 });
 
-test('both homepages provide the same hidden site-wide PV integration', () => {
+test('both homepages provide the same visible site-wide PV badge', () => {
   for (const html of [english, chinese]) {
-    assert.match(html, /id="site-visit-counter"[^>]*hidden/);
-    assert.match(html, /id="site-pv-display"/);
-    assert.match(html, /id="busuanzi_site_pv"[^>]*hidden/);
-    assert.match(html, /cdn\.busuanzi\.cc\/busuanzi\/3\.6\.9\/busuanzi\.min\.js/);
-    assert.match(html, /<script src="\.\/js\/pageviews\.js" defer><\/script>/);
+    assert.match(html, /https:\/\/hits\.sh\/smallflyingpig\.github\.io\.svg\?[^"']*extraCount=10000/);
+    assert.doesNotMatch(html, /busuanzi/);
+    assert.doesNotMatch(html, /pageviews\.js/);
     assert.equal((html.match(/hm\.baidu\.com/g) || []).length, 1);
   }
 });
 
 test('PV counter copy is localized', () => {
-  assert.match(english, /Total visits ·/);
-  assert.match(chinese, /累计访问 ·/);
+  assert.match(english, /alt="Total visits"/);
+  assert.match(chinese, /alt="累计访问"/);
 });
