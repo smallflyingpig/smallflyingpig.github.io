@@ -266,6 +266,8 @@ a:hover { text-decoration: underline; }
 .footer-logos { display: flex; justify-content: center; gap: 15px; padding: 20px 0; flex-wrap: wrap; border-top: 1px solid var(--divider); margin-top: 20px; }
 .footer-logo { height: 40px; object-fit: contain; opacity: 0.6; }
 .footer-logo:hover { opacity: 1; }
+.site-visit-counter { margin: -8px 0 20px; text-align: center; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.site-visit-counter[hidden] { display: none; }
 
 /* Mobile Responsive */
 @media (max-width: 900px) {
