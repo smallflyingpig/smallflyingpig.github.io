@@ -37,22 +37,73 @@ a:hover { text-decoration: underline; }
   height: 50px;
   background: var(--top-nav-bg);
   z-index: 200;
+  display: grid;
+  grid-template-columns: minmax(88px, 1fr) auto minmax(88px, 1fr);
+  align-items: center;
+  padding: 0 22px;
+}
+
+.primary-nav {
+  grid-column: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 30px;
 }
 
-.top-nav a {
+.primary-nav a {
+  position: relative;
   color: white;
   font-size: 15px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  padding: 13px 12px 11px;
+  transition: color 0.2s;
 }
 
-.top-nav a:hover { background: rgba(255,255,255,0.15); text-decoration: none; }
-.top-nav a.active { background: var(--accent); }
+.primary-nav a:hover { color: #f1d89e; text-decoration: none; }
+.primary-nav a.active::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  bottom: 7px;
+  left: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.language-switch {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.language-option {
+  min-width: 34px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+  text-align: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.language-switch a:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  text-decoration: none;
+}
+
+.language-option.active {
+  background: var(--accent);
+  color: #24313c;
+  font-weight: 600;
+}
 
 /* Page Wrapper */
 .page-wrapper {
@@ -275,8 +326,16 @@ a:hover { text-decoration: underline; }
 }
 
 @media (max-width: 768px) {
-  .top-nav { height: 45px; gap: 15px; }
-  .top-nav a { font-size: 13px; padding: 6px 10px; }
+  .top-nav {
+    height: 45px;
+    grid-template-columns: minmax(68px, 1fr) auto minmax(68px, 1fr);
+    padding: 0 10px;
+  }
+  .primary-nav { gap: 8px; }
+  .primary-nav a { font-size: 13px; padding: 11px 9px 9px; }
+  .primary-nav a.active::after { right: 9px; bottom: 5px; left: 9px; }
+  .language-switch { gap: 1px; font-size: 11px; }
+  .language-option { min-width: 28px; padding: 5px 7px; }
   
   .sidebar {
     width: min(320px, 85vw);
