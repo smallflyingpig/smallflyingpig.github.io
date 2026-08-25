@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://smallflyingpig.github.io/</loc></url>
+  <url><loc>https://smallflyingpig.github.io/index_ch.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2021-06-LoRA-Hu-Microsoft.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2022-01-Chain-of-Thought-Wei-Google.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2023-05-DPO-Rafailov-Stanford.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2023-09-LongLoRA-Chen-CUHK.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-02-InfraNoise-Segato-Anthropic.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-02-ManagedAgents-Martin-Anthropic.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-03-TerminalBench-Berkeley.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-04-Anthropic-Agent%E6%9E%B6%E6%9E%84%E5%85%A8%E6%99%AF%E8%A7%A3%E8%AF%BB.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-04-CodePretrainData-Survey.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-04-DPO%20LOSS%E5%85%AC%E5%BC%8F%E5%AE%8C%E6%95%B4%E8%A7%A3%E8%AF%BB.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-04-LLM%20RL%20PPO%26GRPO%20%E5%8D%81%E9%97%AE%E5%8D%81%E7%AD%94.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/2026-04-World%20Model%EF%BC%9A%E8%BF%87%E5%8E%BB%E3%80%81%E7%8E%B0%E5%9C%A8%E5%92%8C%E6%9C%AA%E6%9D%A5.html</loc></url>
+  <url><loc>https://smallflyingpig.github.io/blog/posts/hello-world.html</loc></url>
+</urlset>

@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { createHash } = require('node:crypto');
-const { readFileSync } = require('node:fs');
+const { readFileSync, readdirSync } = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
@@ -41,6 +41,21 @@ test('CV remains byte-for-byte unchanged', () => {
   const cv = readFileSync(path.join(root, 'paper/jiguo_cv.pdf'));
   const digest = createHash('sha256').update(cv).digest('hex');
   assert.equal(digest, '211c1937f15d0c548f64f6e39fb29b030b3553dca64a7769732af1fabdc96b80');
+});
+
+test('public pages do not expose a CV entry', () => {
+  const publicPages = [
+    path.join(root, 'index.html'),
+    path.join(root, 'index_ch.html'),
+    path.join(root, 'blog/index.html'),
+    ...readdirSync(path.join(root, 'blog/posts'))
+      .filter((name) => name.endsWith('.html'))
+      .map((name) => path.join(root, 'blog/posts', name)),
+  ];
+
+  for (const page of publicPages) {
+    assert.doesNotMatch(readFileSync(page, 'utf8'), /href="[^"]*jiguo_cv\.pdf"/i, page);
+  }
 });
 
 test('both homepages provide the same visible site-wide PV badge', () => {
