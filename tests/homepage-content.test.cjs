@@ -14,6 +14,12 @@ function aboutSection(html) {
   return match[0];
 }
 
+function section(html, id) {
+  const match = html.match(new RegExp(`<section id="${id}"[\\s\\S]*?<\\/section>`));
+  assert.ok(match, `${id} section must exist`);
+  return match[0];
+}
+
 test('Chinese homepage uses the approved public Meituan description', () => {
   assert.match(
     aboutSection(chinese),
@@ -35,6 +41,22 @@ test('public role descriptions omit detailed internal-work terminology', () => {
   for (const term of ['PR/Issue', 'repo-level', 'pipeline', 'dataset', 'metric']) {
     assert.doesNotMatch(publicDescriptions, new RegExp(term, 'i'), term);
   }
+});
+
+test('bilingual homepages announce the EMNLP 2026 MUSE paper', () => {
+  const paperUrl = 'https://arxiv.org/abs/2604.13828';
+  const title = 'MUSE: Multi-Domain Chinese User Simulation via Self-Evolving Profiles and Rubric-Guided Alignment';
+  const authors = 'Zihao Liu, Hantao Zhou, <strong>Jiguo Li</strong>, Jun Xu, Jiuchong Gao, Jinghua Hao, Renqing He, Peng Wang';
+
+  for (const html of [english, chinese]) {
+    const publications = section(html, 'pub');
+    assert.match(publications, new RegExp(`<a href="${paperUrl.replaceAll('.', '\\.')}">${title}</a>`));
+    assert.match(publications, new RegExp(authors));
+    assert.match(publications, /<span class="pub-venue badge-ccf-b">EMNLP 2026<\/span>/);
+  }
+
+  assert.match(section(english, 'news'), /2026\.08[\s\S]*MUSE[\s\S]*accepted to <strong>EMNLP 2026<\/strong>/);
+  assert.match(section(chinese, 'news'), /2026\.08[\s\S]*MUSE[\s\S]*被 <strong>EMNLP 2026<\/strong> 接收/);
 });
 
 test('CV remains byte-for-byte unchanged', () => {
