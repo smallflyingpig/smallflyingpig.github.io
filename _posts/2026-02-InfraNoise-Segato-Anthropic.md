@@ -170,14 +170,14 @@ mindmap
 ## 相关论文
 
 - [SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) — 本文核心验证基准之一
-- [Terminal-Bench](https://terminal-bench.com/) — 本文主要研究对象，端到端评估 LLM 终端操作能力的基准
+- [Terminal-Bench](https://www.tbench.ai/) — 本文主要研究对象，端到端评估 LLM 终端操作能力的基准
 - [Holistic Evaluation of Language Models (HELM)](https://arxiv.org/abs/2211.09110) — LLM 评估方法论的经典框架
 - [Scaling Managed Agents: Decoupling the Brain from the Hands](https://www.anthropic.com/engineering/managed-agents) — 同为 Anthropic 的 Agent 基础设施研究，互补视角
 - [BigBench](https://arxiv.org/abs/2206.04615) — 大规模基准测试，静态评估的代表
 
 ## 参考文献
 
-- Terminal-Bench 2.0 — 首个指定每任务 CPU 和 RAM 推荐的 Agent 基准
-- Container Runtime 资源管理 — guaranteed allocation 与 kill threshold 的双参数设计
-- Kubernetes Resource Enforcement — GKE 上的严格执行 vs. 宽裕执行
-- Binomial Confidence Intervals — 1-2 个百分点的统计噪声基线
+- [Terminal-Bench 2.0](https://arxiv.org/abs/2601.11868) — 终端 Agent 真实任务基准
+- [Kubernetes：Pod 与容器资源管理](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) — CPU、内存 requests 与 limits
+- [GKE：调整容器资源 requests 与 limits](https://cloud.google.com/kubernetes-engine/docs/how-to/vertical-pod-autoscaling) — GKE 资源配置指南
+- [NIST：二项分布置信区间](https://www.itl.nist.gov/div898/software/dataplot/refman2/auxillar/binomial.htm) — 统计噪声分析基础

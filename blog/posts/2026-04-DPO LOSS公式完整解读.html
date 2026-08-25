@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DPO LOSS公式完整解读 - Jiguo Li</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
 <link rel="shortcut icon" href="../../jiguo.ico">
@@ -13,44 +13,19 @@
 <script>
 MathJax = {
   tex: {
-    inlineMath: [['$', '$'], ['\(', '\)']],
-    displayMath: [['$$', '$$'], ['\[', '\]']],
-    processEscapes: true
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
   },
   svg: {
     fontCache: 'global'
   }
 };
 </script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-
-<style>
-/* Table styles for markdown tables */
-.blog-detail-body table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 15px 0;
-  font-size: 14px;
-}
-.blog-detail-body table th,
-.blog-detail-body table td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}
-.blog-detail-body table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-}
-.blog-detail-body table tr:nth-child(even) {
-  background-color: #fafafa;
-}
-.blog-detail-body table tr:hover {
-  background-color: #f0f0f0;
-}
-</style>
+<script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
-<body>
+<body class="blog-post-page">
 <nav class="top-nav">
   <a href="../../index.html">Home</a>
   <a href="../index.html" class="active">Blog</a>
@@ -68,7 +43,10 @@ MathJax = {
       </div>
     </div>
   </aside>
-  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="sidebar-toggle" id="sidebarToggle" type="button"
+          aria-controls="sidebar" aria-expanded="false" aria-label="打开页面导航">☰</button>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" type="button"
+          aria-label="关闭页面导航" tabindex="-1"></button>
   <div class="main-content-wrapper">
     <main class="main-content">
       <article class="blog-detail-content">
@@ -77,11 +55,37 @@ MathJax = {
           <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
           <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
         </header>
-        <div class="blog-detail-body"><h1 id="dpo-loss">DPO LOSS公式完整解读</h1>
-<h2 id="_1">一、公式</h2>
-<p>$$\mathcal{L}<em>{DPO} = -\mathbb{E}</em>{(x, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)} \right) \right]$$</p>
-<h2 id="_2">二、符号说明</h2>
-<table>
+        <nav class="article-toc" aria-label="文章目录"><div class="article-toc-label">本文目录</div><div class="toc">
+<ul>
+<li><a href="#一公式">一、公式</a></li>
+<li><a href="#二符号说明">二、符号说明</a></li>
+<li><a href="#三直观理解">三、直观理解</a><ul>
+<li><a href="#简化为三个关键部分">简化为三个关键部分</a></li>
+<li><a href="#符号含义对照">符号含义对照</a></li>
+<li><a href="#优化目标">优化目标</a></li>
+</ul>
+</li>
+<li><a href="#四具体数值例子">四、具体数值例子</a></li>
+<li><a href="#五β-的作用">五、β 的作用</a></li>
+<li><a href="#六完整推导过程">六、完整推导过程</a><ul>
+<li><a href="#step-1-kl-约束下的最优策略">Step 1: KL 约束下的最优策略</a></li>
+<li><a href="#step-2-用拉格朗日乘子法求最优解">Step 2: 用拉格朗日乘子法求最优解</a></li>
+<li><a href="#step-3-反解奖励函数">Step 3: 反解奖励函数</a></li>
+<li><a href="#step-4-代入-bradley-terry-模型">Step 4: 代入 Bradley-Terry 模型</a></li>
+<li><a href="#step-5-最大似然估计">Step 5: 最大似然估计</a></li>
+</ul>
+</li>
+<li><a href="#七与-ppo-的联系">七、与 PPO 的联系</a></li>
+<li><a href="#八一句话总结">八、一句话总结</a></li>
+<li><a href="#参考文献">参考文献</a></li>
+</ul>
+</div>
+</nav>
+        <div class="math-render-warning" id="mathRenderWarning" role="status">公式组件加载失败，请刷新页面后重试。</div>
+        <div class="blog-detail-body"><h2 id="一公式">一、公式<a class="headerlink" href="#一公式" title="本节链接">&para;</a></h2>
+<p>$$\mathcal{L}_{DPO} = -\mathbb{E}_{(x, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)} \right) \right]$$</p>
+<h2 id="二符号说明">二、符号说明<a class="headerlink" href="#二符号说明" title="本节链接">&para;</a></h2>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>符号</th>
@@ -118,15 +122,15 @@ MathJax = {
 <td>温度参数，控制 KL 约束强度</td>
 </tr>
 </tbody>
-</table>
-<h2 id="_3">三、直观理解</h2>
-<h3 id="_4">简化为三个关键部分</h3>
+</table></div>
+<h2 id="三直观理解">三、直观理解<a class="headerlink" href="#三直观理解" title="本节链接">&para;</a></h2>
+<h3 id="简化为三个关键部分">简化为三个关键部分<a class="headerlink" href="#简化为三个关键部分" title="本节链接">&para;</a></h3>
 <pre><code>损失 = -log(sigmoid( 偏好回复的提升  -  非偏好回复的提升 ))
                          ↑                      ↑
                     想让它大                想让它小
 </code></pre>
-<h3 id="_5">符号含义对照</h3>
-<table>
+<h3 id="符号含义对照">符号含义对照<a class="headerlink" href="#符号含义对照" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>符号</th>
@@ -155,8 +159,8 @@ MathJax = {
 <td>让括号内越大越好</td>
 </tr>
 </tbody>
-</table>
-<h3 id="_6">优化目标</h3>
+</table></div>
+<h3 id="优化目标">优化目标<a class="headerlink" href="#优化目标" title="本节链接">&para;</a></h3>
 <p><strong>最小化损失 = 最大化括号内值 = 让偏好回复概率 ↑，非偏好回复概率 ↓</strong></p>
 <pre><code>初始状态:
   P(偏好回复) = 30%     P(非偏好回复) = 50%
@@ -164,9 +168,9 @@ MathJax = {
 优化后:
   P(偏好回复) = 50% ↑   P(非偏好回复) = 30% ↓
 </code></pre>
-<h2 id="_7">四、具体数值例子</h2>
+<h2 id="四具体数值例子">四、具体数值例子<a class="headerlink" href="#四具体数值例子" title="本节链接">&para;</a></h2>
 <p>假设参考模型 $\pi_{ref}$ 和当前模型 $\pi_\theta$ 对两个回复的概率：</p>
-<table>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th></th>
@@ -189,7 +193,7 @@ MathJax = {
 <td><strong>0.3</strong> ↓</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>计算 log ratio：</p>
 <ul>
 <li>初始：$\log\frac{\pi_\theta(y_w)}{\pi_{ref}(y_w)} = \log\frac{0.3}{0.3} = 0$</li>
@@ -202,8 +206,8 @@ MathJax = {
 <li>初始：$-\log\sigma(0 - 0) = -\log(0.5) \approx 0.69$</li>
 <li>优化后：$-\log\sigma(0.51 - (-0.51)) = -\log\sigma(1.02) \approx 0.26$ ✓ 损失降低</li>
 </ul>
-<h2 id="_8">五、β 的作用</h2>
-<table>
+<h2 id="五β-的作用">五、β 的作用<a class="headerlink" href="#五β-的作用" title="本节链接">&para;</a></h2>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>β 值</th>
@@ -224,23 +228,23 @@ MathJax = {
 <td>0.1 ~ 0.5</td>
 </tr>
 </tbody>
-</table>
-<h2 id="_9">六、完整推导过程</h2>
-<h3 id="step-1-kl">Step 1: KL 约束下的最优策略</h3>
+</table></div>
+<h2 id="六完整推导过程">六、完整推导过程<a class="headerlink" href="#六完整推导过程" title="本节链接">&para;</a></h2>
+<h3 id="step-1-kl-约束下的最优策略">Step 1: KL 约束下的最优策略<a class="headerlink" href="#step-1-kl-约束下的最优策略" title="本节链接">&para;</a></h3>
 <p><strong>原始优化目标：</strong></p>
-<p>$$\max_\pi \mathbb{E}<em>{x \sim \mathcal{D}, y \sim \pi(\cdot|x)}[r(x,y)] - \beta \cdot \mathbb{E}</em>{x \sim \mathcal{D}}[\text{KL}(\pi(\cdot|x) || \pi_{ref}(\cdot|x))]$$</p>
+<p>$$\max_\pi \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi(\cdot|x)}[r(x,y)] - \beta \cdot \mathbb{E}_{x \sim \mathcal{D}}[\text{KL}(\pi(\cdot|x) || \pi_{ref}(\cdot|x))]$$</p>
 <p><strong>KL 散度定义：</strong></p>
 <p>$$\text{KL}(\pi || \pi_{ref}) = \sum_y \pi(y|x) \log \frac{\pi(y|x)}{\pi_{ref}(y|x)}$$</p>
 <p><strong>展开 KL 项：</strong></p>
 <p>注意：$y$ 是从 $\pi(\cdot|x)$ 采样的，所以：</p>
-<p>$$\sum_y \pi(y|x) \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} = \mathbb{E}<em>{y \sim \pi(\cdot|x)}\left[\log \frac{\pi(y|x)}{\pi</em>{ref}(y|x)}\right]$$</p>
+<p>$$\sum_y \pi(y|x) \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} = \mathbb{E}_{y \sim \pi(\cdot|x)}\left[\log \frac{\pi(y|x)}{\pi_{ref}(y|x)}\right]$$</p>
 <p><strong>更严谨的优化目标写法：</strong></p>
-<p>$$\max_\pi \mathbb{E}<em>{x \sim \mathcal{D}} \left[ \mathbb{E}</em>{y \sim \pi(\cdot|x)}[r(x,y)] - \beta \cdot \text{KL}(\pi(\cdot|x) || \pi_{ref}(\cdot|x)) \right]$$</p>
+<p>$$\max_\pi \mathbb{E}_{x \sim \mathcal{D}} \left[ \mathbb{E}_{y \sim \pi(\cdot|x)}[r(x,y)] - \beta \cdot \text{KL}(\pi(\cdot|x) || \pi_{ref}(\cdot|x)) \right]$$</p>
 <p>展开 KL：</p>
-<p>$$= \max_\pi \mathbb{E}<em>{x \sim \mathcal{D}} \left[ \mathbb{E}</em>{y \sim \pi}[r(x,y)] - \beta \cdot \mathbb{E}<em>{y \sim \pi}\left[\log \frac{\pi(y|x)}{\pi</em>{ref}(y|x)}\right] \right]$$</p>
+<p>$$= \max_\pi \mathbb{E}_{x \sim \mathcal{D}} \left[ \mathbb{E}_{y \sim \pi}[r(x,y)] - \beta \cdot \mathbb{E}_{y \sim \pi}\left[\log \frac{\pi(y|x)}{\pi_{ref}(y|x)}\right] \right]$$</p>
 <p>合并期望：</p>
-<p>$$= \max_\pi \mathbb{E}<em>{x \sim \mathcal{D}, y \sim \pi} \left[ r(x,y) - \beta \log \frac{\pi(y|x)}{\pi</em>{ref}(y|x)} \right]$$</p>
-<h3 id="step-2">Step 2: 用拉格朗日乘子法求最优解</h3>
+<p>$$= \max_\pi \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi} \left[ r(x,y) - \beta \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} \right]$$</p>
+<h3 id="step-2-用拉格朗日乘子法求最优解">Step 2: 用拉格朗日乘子法求最优解<a class="headerlink" href="#step-2-用拉格朗日乘子法求最优解" title="本节链接">&para;</a></h3>
 <p>引入拉格朗日乘子 $\lambda(x)$ 保证 $\sum_y \pi(y|x) = 1$：</p>
 <p>$$\mathcal{L} = \sum_y \pi(y|x) \left[ r(x,y) - \beta \log \frac{\pi(y|x)}{\pi_{ref}(y|x)} \right] + \lambda(x) \left( \sum_y \pi(y|x) - 1 \right)$$</p>
 <p>对 $\pi(y|x)$ 求偏导：</p>
@@ -250,25 +254,25 @@ MathJax = {
 <p>$$\pi(y|x) = \pi_{ref}(y|x) \cdot e^{r(x,y)/\beta} \cdot e^{(\lambda(x) - \beta)/\beta}$$</p>
 <p>利用归一化条件 $\sum_y \pi(y|x) = 1$，设 $Z(x) = \sum_y \pi_{ref}(y|x) e^{r(x,y)/\beta}$：</p>
 <p>$$\boxed{\pi^*(y|x) = \frac{1}{Z(x)} \pi_{ref}(y|x) \cdot e^{r(x,y)/\beta}}$$</p>
-<h3 id="step-3">Step 3: 反解奖励函数</h3>
+<h3 id="step-3-反解奖励函数">Step 3: 反解奖励函数<a class="headerlink" href="#step-3-反解奖励函数" title="本节链接">&para;</a></h3>
 <p>从最优策略表达式中反解奖励函数：</p>
 <p>$$r(x,y) = \beta \log \frac{\pi^*(y|x)}{\pi_{ref}(y|x)} + \beta \log Z(x)$$</p>
 <p><strong>关键洞察</strong>：$\beta \log Z(x)$ 只与 $x$ 有关，与 $y$ 无关，在 Bradley-Terry 模型中会消掉！</p>
-<h3 id="step-4-bradley-terry">Step 4: 代入 Bradley-Terry 模型</h3>
+<h3 id="step-4-代入-bradley-terry-模型">Step 4: 代入 Bradley-Terry 模型<a class="headerlink" href="#step-4-代入-bradley-terry-模型" title="本节链接">&para;</a></h3>
 <p>人类偏好概率：</p>
 <p>$$p(y_w \succ y_l | x) = \sigma(r(x, y_w) - r(x, y_l))$$</p>
 <p>代入隐式奖励（$Z(x)$ 项消掉）：</p>
 <p>$$p(y_w \succ y_l | x) = \sigma\left(\beta \log \frac{\pi(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi(y_l|x)}{\pi_{ref}(y_l|x)}\right)$$</p>
-<h3 id="step-5">Step 5: 最大似然估计</h3>
+<h3 id="step-5-最大似然估计">Step 5: 最大似然估计<a class="headerlink" href="#step-5-最大似然估计" title="本节链接">&para;</a></h3>
 <p>最大化偏好数据的对数似然：</p>
 <p>$$\mathcal{L}_{DPO} = -\mathbb{E}\left[\log p(y_w \succ y_l | x)\right]$$</p>
 <p>得到最终公式：</p>
-<p>$$\boxed{\mathcal{L}<em>{DPO} = -\mathbb{E}\left[\log \sigma\left(\beta \log \frac{\pi</em>\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}\right)\right]}$$</p>
-<h2 id="ppo">七、与 PPO 的联系</h2>
+<p>$$\boxed{\mathcal{L}_{DPO} = -\mathbb{E}\left[\log \sigma\left(\beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}\right)\right]}$$</p>
+<h2 id="七与-ppo-的联系">七、与 PPO 的联系<a class="headerlink" href="#七与-ppo-的联系" title="本节链接">&para;</a></h2>
 <p>PPO 优化目标：</p>
 <p>$$\max_\pi \mathbb{E}[r(x,y)] - \beta \cdot \text{KL}(\pi || \pi_{ref})$$</p>
 <p>DPO 的 $\beta \log \frac{\pi}{\pi_{ref}}$ 正是这个 KL 约束下最优奖励函数的<strong>闭式解</strong>。</p>
-<table>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>方面</th>
@@ -303,14 +307,24 @@ MathJax = {
 <td>低</td>
 </tr>
 </tbody>
-</table>
-<h2 id="_10">八、一句话总结</h2>
-<p><strong>DPO 通过对比"偏好回复的概率提升"和"非偏好回复的概率降低"，直接优化人类偏好，无需显式奖励模型。</strong></p></div>
+</table></div>
+<h2 id="八一句话总结">八、一句话总结<a class="headerlink" href="#八一句话总结" title="本节链接">&para;</a></h2>
+<p><strong>DPO 通过对比"偏好回复的概率提升"和"非偏好回复的概率降低"，直接优化人类偏好，无需显式奖励模型。</strong></p>
+<h2 id="参考文献">参考文献<a class="headerlink" href="#参考文献" title="本节链接">&para;</a></h2>
+<ul>
+<li><a href="https://arxiv.org/abs/2305.18290">Rafailov et al. “Direct Preference Optimization: Your Language Model is Secretly a Reward Model.”</a>, 2023.</li>
+<li><a href="https://arxiv.org/abs/1707.06347">Schulman et al. “Proximal Policy Optimization Algorithms.”</a>, 2017.</li>
+</ul></div>
         <a href="../index.html" class="blog-back">← 返回博客列表</a>
       </article>
     </main>
   </div>
 </div>
-<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+<script>
+document.getElementById('MathJax-script').addEventListener('error', function() {
+  document.getElementById('mathRenderWarning').classList.add('visible');
+});
+</script>
+<script src="../../js/sidebar.js"></script>
 </body>
 </html>

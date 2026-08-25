@@ -566,17 +566,17 @@ Genie/Genie 2  理解环境生成
 
 ### 参考文献
 
-1. DreamerV3: https://arxiv.org/abs/2301.04104
-2. I-JEPA: https://arxiv.org/abs/2301.08243
-3. V-JEPA: https://arxiv.org/abs/2401.13841
-4. V-JEPA 2.0: https://arxiv.org/abs/2501.06814
-5. Sora: https://arxiv.org/abs/2402.17177
-6. UniSim: https://arxiv.org/abs/2305.12920
-7. Genie: https://arxiv.org/abs/2312.11435
-8. Genie 2: https://arxiv.org/abs/2412.06214
-9. π₀: https://arxiv.org/abs/2410.24165
-10. World Models for Embodied AI Survey: https://arxiv.org/abs/2409.11236
-11. Dreamer-Long: https://arxiv.org/abs/2504.01123
-12. Hierarchical World Models: https://arxiv.org/abs/2505.00102
-13. Bridging Sim-to-Real Gap: https://arxiv.org/abs/2502.01868
-14. RoboCasa: https://arxiv.org/abs/2503.14210
+1. [DreamerV3](https://arxiv.org/abs/2301.04104)
+2. [I-JEPA](https://arxiv.org/abs/2301.08243)
+3. [V-JEPA](https://arxiv.org/abs/2401.13841)
+4. [V-JEPA 2.0](https://arxiv.org/abs/2501.06814)
+5. [Sora](https://arxiv.org/abs/2402.17177)
+6. [UniSim](https://arxiv.org/abs/2305.12920)
+7. [Genie](https://arxiv.org/abs/2312.11435)
+8. [Genie 2](https://arxiv.org/abs/2412.06214)
+9. [π₀](https://arxiv.org/abs/2410.24165)
+10. [World Models for Embodied AI Survey](https://arxiv.org/abs/2409.11236)
+11. [Dreamer-Long](https://arxiv.org/abs/2504.01123)
+12. [Hierarchical World Models](https://arxiv.org/abs/2505.00102)
+13. [Bridging Sim-to-Real Gap](https://arxiv.org/abs/2502.01868)
+14. [RoboCasa](https://arxiv.org/abs/2503.14210)

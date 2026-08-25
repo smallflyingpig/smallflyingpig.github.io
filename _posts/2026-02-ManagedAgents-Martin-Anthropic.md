@@ -211,7 +211,7 @@ mindmap
 
 ## 参考文献
 
-- Operating Systems: Three Easy Pieces — 操作系统虚拟化设计的经典参考
-- Event Sourcing Pattern — 事件溯源架构模式，与 Session Log 设计思路一致
-- Pets vs Cattle — 云计算基础设施的运维哲学
+- [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/) — 操作系统虚拟化设计的经典参考
+- [Event Sourcing Pattern](https://martinfowler.com/eaaDev/EventSourcing.html) — 与 Session Log 设计思路一致
+- [Google Cloud：Best practices for operating containers](https://cloud.google.com/architecture/best-practices-for-operating-containers) — 可替换基础设施与容器运维实践
 - [Managed Agents Documentation](https://platform.claude.com/docs/en/managed-agents/overview) — Anthropic 官方文档

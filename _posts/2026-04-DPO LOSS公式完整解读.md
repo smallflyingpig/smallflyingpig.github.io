@@ -182,3 +182,8 @@ DPO 的 $\beta \log \frac{\pi}{\pi_{ref}}$ 正是这个 KL 约束下最优奖励
 ## 八、一句话总结
 
 **DPO 通过对比"偏好回复的概率提升"和"非偏好回复的概率降低"，直接优化人类偏好，无需显式奖励模型。**
+
+## 参考文献
+
+- [Rafailov et al. “Direct Preference Optimization: Your Language Model is Secretly a Reward Model.”](https://arxiv.org/abs/2305.18290), 2023.
+- [Schulman et al. “Proximal Policy Optimization Algorithms.”](https://arxiv.org/abs/1707.06347), 2017.

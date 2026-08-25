@@ -13,7 +13,7 @@ excerpt: - **标题**: TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF L
 - **作者**: 多个机构合作（Berkeley AI Research, CMU, Stanford 等）
 - **机构**: UC Berkeley, CMU, Stanford, 等多家机构
 - **发表时间**: 2026
-- **论文链接**: 本地PDF
+- **论文链接**: [arXiv:2601.11868](https://arxiv.org/abs/2601.11868)
 
 ## 一、研究背景与动机
 
@@ -156,4 +156,6 @@ mindmap
 - InterCode: Standardizing and Benchmarking Interactive Coding with Execution Feedback
 
 ## 参考文献
-{论文引用的主要参考文献}
+
+- [Merrill et al. “Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces.”](https://arxiv.org/abs/2601.11868), 2026.
+- [Terminal-Bench 官方网站](https://www.tbench.ai/) — 数据集、评测框架与排行榜

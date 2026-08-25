@@ -255,3 +255,9 @@ GRPO设置clip ratio=10并未引发训练不稳定，关键在于其配套约束
 ### 结语
 
 PPO 像是一位严厉的导师（Critic），时刻盯着学生的每一步并给出反馈；而 GRPO 则像是一场选拔赛，让学生们（Group）同台竞技，通过优胜劣汰来自我进化。理解了这十个问题，你就掌握了现代大模型强化学习从 PPO 到 GRPO 演进的核心脉络。
+
+## 参考文献
+
+- [Schulman et al. “Proximal Policy Optimization Algorithms.”](https://arxiv.org/abs/1707.06347), 2017.
+- [Shao et al. “DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models.”](https://arxiv.org/abs/2402.03300), 2024.
+- [DeepSeek-AI. “DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning.”](https://arxiv.org/abs/2501.12948), 2025.

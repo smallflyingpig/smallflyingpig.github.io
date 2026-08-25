@@ -272,6 +272,8 @@ mindmap
 
 ## 参考文献
 
+- [Chen et al. “LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models.”](https://arxiv.org/abs/2309.12307), 2023.
+
 ```bibtex
 @article{chen2023longlora,
   title={LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models},

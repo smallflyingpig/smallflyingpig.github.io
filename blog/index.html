@@ -41,7 +41,10 @@
     <ul class="section-nav" id="yearFilter"></ul>
   </aside>
 
-  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="sidebar-toggle" id="sidebarToggle" type="button"
+          aria-controls="sidebar" aria-expanded="false" aria-label="打开页面导航">☰</button>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" type="button"
+          aria-label="关闭页面导航" tabindex="-1"></button>
 
   <div class="main-content-wrapper">
     <main class="main-content">
@@ -54,10 +57,6 @@
 
 <script>
 let posts=[], cat='all', tag=null, year=null;
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('collapsed');
-}
 
 async function load() {
   try {
@@ -135,6 +134,7 @@ document.getElementById('yearFilter').addEventListener('click', e => {
 
 load();
 </script>
+<script src="../js/sidebar.js"></script>
 
 </body>
 </html>

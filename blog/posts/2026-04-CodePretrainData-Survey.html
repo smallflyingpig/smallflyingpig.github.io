@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Code 预训练数据优化：最新进展与关键文献 - Jiguo Li</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
 <link rel="shortcut icon" href="../../jiguo.ico">
@@ -13,44 +13,19 @@
 <script>
 MathJax = {
   tex: {
-    inlineMath: [['$', '$'], ['\(', '\)']],
-    displayMath: [['$$', '$$'], ['\[', '\]']],
-    processEscapes: true
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
   },
   svg: {
     fontCache: 'global'
   }
 };
 </script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-
-<style>
-/* Table styles for markdown tables */
-.blog-detail-body table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 15px 0;
-  font-size: 14px;
-}
-.blog-detail-body table th,
-.blog-detail-body table td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}
-.blog-detail-body table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-}
-.blog-detail-body table tr:nth-child(even) {
-  background-color: #fafafa;
-}
-.blog-detail-body table tr:hover {
-  background-color: #f0f0f0;
-}
-</style>
+<script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
-<body>
+<body class="blog-post-page">
 <nav class="top-nav">
   <a href="../../index.html">Home</a>
   <a href="../index.html" class="active">Blog</a>
@@ -68,7 +43,10 @@ MathJax = {
       </div>
     </div>
   </aside>
-  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="sidebar-toggle" id="sidebarToggle" type="button"
+          aria-controls="sidebar" aria-expanded="false" aria-label="打开页面导航">☰</button>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" type="button"
+          aria-label="关闭页面导航" tabindex="-1"></button>
   <div class="main-content-wrapper">
     <main class="main-content">
       <article class="blog-detail-content">
@@ -77,15 +55,73 @@ MathJax = {
           <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
           <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
         </header>
-        <div class="blog-detail-body"><h2 id="-">---|-------|------|----------|------|----------|---------| ...</h2>
-<h1 id="code">Code 预训练数据优化：最新进展与关键文献</h1>
+        <nav class="article-toc" aria-label="文章目录"><div class="article-toc-label">本文目录</div><div class="toc">
+<ul>
+<li><a href="#-">---|-------|------|----------|------|----------|---------| ...</a></li>
+<li><a href="#一业界-code-模型全景技术报告速览">一、业界 Code 模型全景（技术报告速览）</a><ul>
+<li><a href="#各模型数据混合策略对比">各模型数据混合策略对比</a></li>
+<li><a href="#关键观察">关键观察</a></li>
+</ul>
+</li>
+<li><a href="#二核心数据集原材料">二、核心数据集（原材料）</a></li>
+<li><a href="#三代码预训练数据管线关键环节">三、代码预训练数据管线关键环节</a><ul>
+<li><a href="#31-去重-deduplication">3.1 去重 (Deduplication)</a></li>
+<li><a href="#32-质量过滤-quality-filtering">3.2 质量过滤 (Quality Filtering)</a></li>
+<li><a href="#33-数据混合比例-data-mixing">3.3 数据混合比例 (Data Mixing)</a></li>
+<li><a href="#34-污染审计-decontamination">3.4 污染审计 (Decontamination)</a></li>
+</ul>
+</li>
+<li><a href="#四repo-级别与长文预训练midtrain">四、Repo 级别与长文预训练（Midtrain）</a><ul>
+<li><a href="#41-repo-级别上下文">4.1 Repo 级别上下文</a></li>
+<li><a href="#42-长上下文扩展midtrain-阶段">4.2 长上下文扩展（Midtrain 阶段）</a></li>
+</ul>
+</li>
+<li><a href="#五scaling-laws-与训练阶段交互重要新方向">五、Scaling Laws 与训练阶段交互（重要新方向）</a><ul>
+<li><a href="#51-code-专用-scaling-laws">5.1 Code 专用 Scaling Laws</a></li>
+<li><a href="#52-编程语言多样性的-scaling-law">5.2 编程语言多样性的 Scaling Law</a></li>
+<li><a href="#53-pre-trainingmid-trainingrl-的交互">5.3 Pre-training、Mid-training、RL 的交互</a></li>
+<li><a href="#54-通过持续预训练-scaling-agent">5.4 通过持续预训练 Scaling Agent</a></li>
+</ul>
+</li>
+<li><a href="#六code-新范式探索">六、Code 新范式探索</a><ul>
+<li><a href="#61-code-world-models代码世界模型">6.1 Code World Models（代码世界模型）</a></li>
+<li><a href="#62-project-级代码补全的预训练">6.2 Project 级代码补全的预训练</a></li>
+</ul>
+</li>
+<li><a href="#七必读论文清单">七、必读论文清单</a><ul>
+<li><a href="#tier-1必读做-code-预训练前必须了解">Tier 1：必读（做 code 预训练前必须了解）</a></li>
+<li><a href="#tier-2重要最新进展-训练策略">Tier 2：重要（最新进展 &amp; 训练策略）</a></li>
+<li><a href="#tier-3前沿探索新方向">Tier 3：前沿探索（新方向）</a></li>
+<li><a href="#tier-4背景-survey">Tier 4：背景 Survey</a></li>
+</ul>
+</li>
+<li><a href="#八实操建议">八、实操建议</a><ul>
+<li><a href="#数据管线">数据管线</a></li>
+<li><a href="#repo-级-长文">Repo 级 &amp; 长文</a></li>
+<li><a href="#scaling-新方向">Scaling &amp; 新方向</a></li>
+<li><a href="#路线图建议">路线图建议</a></li>
+</ul>
+</li>
+<li><a href="#参考资料">参考资料</a><ul>
+<li><a href="#技术报告">技术报告</a></li>
+<li><a href="#关键研究论文">关键研究论文</a></li>
+<li><a href="#数据集">数据集</a></li>
+<li><a href="#分析博客">分析博客</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+        <div class="math-render-warning" id="mathRenderWarning" role="status">公式组件加载失败，请刷新页面后重试。</div>
+        <div class="blog-detail-body"><h2 id="-">---|-------|------|----------|------|----------|---------| ...<a class="headerlink" href="#-" title="本节链接">&para;</a></h2>
+<h1 id="code-预训练数据优化最新进展与关键文献">Code 预训练数据优化：最新进展与关键文献<a class="headerlink" href="#code-预训练数据优化最新进展与关键文献" title="本节链接">&para;</a></h1>
 <blockquote>
 <p>调研时间：2026-04，聚焦 pretrain 阶段的 code 数据优化，涵盖数据管线、混合比例、repo 级长文组织、去重与质量过滤、Scaling Laws 等。</p>
 </blockquote>
 <hr />
-<h2 id="code_1">一、业界 Code 模型全景（技术报告速览）</h2>
+<h2 id="一业界-code-模型全景技术报告速览">一、业界 Code 模型全景（技术报告速览）<a class="headerlink" href="#一业界-code-模型全景技术报告速览" title="本节链接">&para;</a></h2>
 <p>做 code 预训练，先了解头部模型的训练方案是最高效的入门方式：</p>
-<table>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>模型</th>
@@ -171,8 +207,8 @@ MathJax = {
 <td>通用 MoE，大量合成数据，agent 能力强</td>
 </tr>
 </tbody>
-</table>
-<h3 id="_1">各模型数据混合策略对比</h3>
+</table></div>
+<h3 id="各模型数据混合策略对比">各模型数据混合策略对比<a class="headerlink" href="#各模型数据混合策略对比" title="本节链接">&para;</a></h3>
 <pre><code>StarCoder 2:     ████████████████████████████████████████ 100% code
 DeepSeek-Coder-V2: ████████████████████████████████████████████████ 87% code + 13% math
 CodeGeeX4 (GLM): ████████████████████████████████████████████ 63% code + 21% math + 16% text
@@ -180,28 +216,26 @@ Qwen2.5-Coder:    ████████████████████�
 Llama 4 Maverick: ████████████████████████████████████████████████████████████ ~45% code + 55% 其他
 Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未公开）
 </code></pre>
-<h3 id="_2">关键观察</h3>
+<h3 id="关键观察">关键观察<a class="headerlink" href="#关键观察" title="本节链接">&para;</a></h3>
 <ol>
-<li><strong>两种流派</strong>：</li>
-<li><strong>纯 code 派</strong>（StarCoder2, DeepSeek-Coder-V2）：从零训练，纯 code（+math），code 能力上限高但通用性弱</li>
 <li>
-<p><strong>混合派</strong>（Qwen, CodeGeeX4, Llama 4, Kimi K2）：code + math + general text 混合，通用性和 code 能力兼顾</p>
+<p><strong>两种流派</strong>：<br />
+   - <strong>纯 code 派</strong>（StarCoder2, DeepSeek-Coder-V2）：从零训练，纯 code（+math），code 能力上限高但通用性弱<br />
+   - <strong>混合派</strong>（Qwen, CodeGeeX4, Llama 4, Kimi K2）：code + math + general text 混合，通用性和 code 能力兼顾</p>
 </li>
 <li>
-<p><strong>课程学习是共识</strong>：几乎所有模型都在训练过程中调整 data mix，而非固定比例</p>
-</li>
-<li>Qwen2.5-Coder 三阶段：50% → 65% → 75% code</li>
-<li>Llama 4：训练后期提高 code 比例</li>
-<li>
-<p>这是 2024-2025 的标准做法</p>
+<p><strong>课程学习是共识</strong>：几乎所有模型都在训练过程中调整 data mix，而非固定比例<br />
+   - Qwen2.5-Coder 三阶段：50% → 65% → 75% code<br />
+   - Llama 4：训练后期提高 code 比例<br />
+   - 这是 2024-2025 的标准做法</p>
 </li>
 <li>
 <p><strong>OpenCoder 是最佳入门参考</strong>：完全开源的训练 pipeline、数据、中间 checkpoint，8B 模型打平 70B 级模型</p>
 </li>
 </ol>
 <hr />
-<h2 id="_3">二、核心数据集（原材料）</h2>
-<table>
+<h2 id="二核心数据集原材料">二、核心数据集（原材料）<a class="headerlink" href="#二核心数据集原材料" title="本节链接">&para;</a></h2>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>数据集</th>
@@ -242,12 +276,12 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>含合成 code 数据</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <hr />
-<h2 id="_4">三、代码预训练数据管线关键环节</h2>
-<h3 id="31-deduplication">3.1 去重 (Deduplication)</h3>
+<h2 id="三代码预训练数据管线关键环节">三、代码预训练数据管线关键环节<a class="headerlink" href="#三代码预训练数据管线关键环节" title="本节链接">&para;</a></h2>
+<h3 id="31-去重-deduplication">3.1 去重 (Deduplication)<a class="headerlink" href="#31-去重-deduplication" title="本节链接">&para;</a></h3>
 <p>业界共识从「能去就去」转向<strong>结构感知的精准去重</strong>：</p>
-<table>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>方法</th>
@@ -276,10 +310,10 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>实现复杂</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>关键发现（2025 共识）：</strong> 过度去重会移除有价值的长尾代码模式，降低模型在 edge case 上的表现。推荐<strong>轻度去重 + 结构保留</strong>策略。</p>
-<h3 id="32-quality-filtering">3.2 质量过滤 (Quality Filtering)</h3>
-<table>
+<h3 id="32-质量过滤-quality-filtering">3.2 质量过滤 (Quality Filtering)<a class="headerlink" href="#32-质量过滤-quality-filtering" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>策略</th>
@@ -304,11 +338,11 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>单一过滤器不如组合</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>2025 核心反转：</strong> 多篇论文发现「最小过滤（只删明显损坏文件）」在某些场景下比「重度过滤」效果更好，取决于总数据量。<strong>宁可多留，不要过度清洗。</strong></p>
-<h3 id="33-data-mixing">3.3 数据混合比例 (Data Mixing)</h3>
-<h4 id="qwen25-coder">Qwen2.5-Coder 的三阶段课程学习（详细参考）</h4>
-<table>
+<h3 id="33-数据混合比例-data-mixing">3.3 数据混合比例 (Data Mixing)<a class="headerlink" href="#33-数据混合比例-data-mixing" title="本节链接">&para;</a></h3>
+<h4 id="qwen25-coder-的三阶段课程学习详细参考">Qwen2.5-Coder 的三阶段课程学习（详细参考）<a class="headerlink" href="#qwen25-coder-的三阶段课程学习详细参考" title="本节链接">&para;</a></h4>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>阶段</th>
@@ -341,13 +375,13 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>~15%</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <ul>
 <li>580+ 编程语言，Python ~25%, JavaScript ~15%, Java ~12%, C/C++ ~10%</li>
 <li>继续 pretrain 自 Qwen2.5 base（非从零训练）</li>
 </ul>
-<h4 id="llama-4">Llama 4 的分阶段课程学习</h4>
-<table>
+<h4 id="llama-4-的分阶段课程学习">Llama 4 的分阶段课程学习<a class="headerlink" href="#llama-4-的分阶段课程学习" title="本节链接">&para;</a></h4>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>模型</th>
@@ -376,11 +410,11 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>Code 成为最大类别</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>参考来源：</strong><br />
 - Llama 4 技术报告: <a href="https://arxiv.org/abs/2601.11659">arXiv 2601.11659</a>（注：已被 Meta 撤回）<br />
 - <a href="https://sebastianraschka.com/blog/">Sebastian Raschka 博客</a> — LLM 训练细节分析的最佳独立来源</p>
-<h3 id="34-decontamination">3.4 污染审计 (Decontamination)</h3>
+<h3 id="34-污染审计-decontamination">3.4 污染审计 (Decontamination)<a class="headerlink" href="#34-污染审计-decontamination" title="本节链接">&para;</a></h3>
 <blockquote>
 <p>这是任何 code 预训练的<strong>必修课</strong>，必须在去重/过滤之后单独做。</p>
 </blockquote>
@@ -390,9 +424,9 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <li>参考论文：<em>Contamination in Code LLM Benchmarks: A Systematic Audit</em> (2025)</li>
 </ul>
 <hr />
-<h2 id="repo-midtrain">四、Repo 级别与长文预训练（Midtrain）</h2>
-<h3 id="41-repo">4.1 Repo 级别上下文</h3>
-<table>
+<h2 id="四repo-级别与长文预训练midtrain">四、Repo 级别与长文预训练（Midtrain）<a class="headerlink" href="#四repo-级别与长文预训练midtrain" title="本节链接">&para;</a></h2>
+<h3 id="41-repo-级别上下文">4.1 Repo 级别上下文<a class="headerlink" href="#41-repo-级别上下文" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>模型</th>
@@ -421,10 +455,10 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>开源标杆，多机构协作</td>
 </tr>
 </tbody>
-</table>
-<h3 id="42-midtrain">4.2 长上下文扩展（Midtrain 阶段）</h3>
+</table></div>
+<h3 id="42-长上下文扩展midtrain-阶段">4.2 长上下文扩展（Midtrain 阶段）<a class="headerlink" href="#42-长上下文扩展midtrain-阶段" title="本节链接">&para;</a></h3>
 <p>当前主流做法是在 midtrain 阶段做 <strong>progressive context extension</strong>：</p>
-<table>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>方法</th>
@@ -465,17 +499,17 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>自适应方案</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>最佳实践：</strong><br />
 1. <strong>Midtrain 阶段</strong>（而非 post-training）是做 context extension 的首选<br />
 2. <strong>Progressive/incremental scaling</strong> 比一次性扩展更稳定<br />
 3. 用 <strong>repo 级别的真实代码</strong>（跨文件依赖）作为长文训练数据，而非 padding<br />
 4. 参考 CodeLongBench 做长文能力评测</p>
 <hr />
-<h2 id="scaling-laws">五、Scaling Laws 与训练阶段交互（重要新方向）</h2>
-<h3 id="51-code-scaling-laws">5.1 Code 专用 Scaling Laws</h3>
+<h2 id="五scaling-laws-与训练阶段交互重要新方向">五、Scaling Laws 与训练阶段交互（重要新方向）<a class="headerlink" href="#五scaling-laws-与训练阶段交互重要新方向" title="本节链接">&para;</a></h2>
+<h3 id="51-code-专用-scaling-laws">5.1 Code 专用 Scaling Laws<a class="headerlink" href="#51-code-专用-scaling-laws" title="本节链接">&para;</a></h3>
 <p>Code 模型的 scaling law 与 NLP 模型有显著差异：</p>
-<table>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>发现</th>
@@ -500,22 +534,22 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>~15% 比例，超过引入分布偏移</td>
 </tr>
 </tbody>
-</table>
-<h3 id="52-scaling-law">5.2 编程语言多样性的 Scaling Law</h3>
+</table></div>
+<h3 id="52-编程语言多样性的-scaling-law">5.2 编程语言多样性的 Scaling Law<a class="headerlink" href="#52-编程语言多样性的-scaling-law" title="本节链接">&para;</a></h3>
 <p><strong>必读：</strong> <em>Scaling Laws for Code: Every Programming Language Matters</em> (<a href="https://arxiv.org/abs/2506.16327">2506.16327</a>, 中国人民大学, 2025.06)</p>
 <p>核心发现：<br />
 - <strong>多语言预训练始终优于单语言预训练</strong><br />
 - 新增语言的收益呈<strong>对数递减</strong><br />
 - <strong>语言相似性</strong>是关键因素 — 添加相似语言（如 Java+Kotlin）的收益高于添加不相关语言<br />
 - 对制定 code data mixing 策略有直接指导意义</p>
-<h3 id="53-pre-trainingmid-trainingrl">5.3 Pre-training、Mid-training、RL 的交互</h3>
+<h3 id="53-pre-trainingmid-trainingrl-的交互">5.3 Pre-training、Mid-training、RL 的交互<a class="headerlink" href="#53-pre-trainingmid-trainingrl-的交互" title="本节链接">&para;</a></h3>
 <p><strong>必读：</strong> <em>On the Interplay of Pre-Training, Mid-Training, and RL on Reasoning Language Models</em> (<a href="https://arxiv.org/abs/2507.14320">2507.14320</a>, 浙大 &amp; 阿里巴巴, 2025.07)</p>
 <p>核心发现：<br />
 - 三个训练阶段（pre-training → mid-training/SFT → RL）的<strong>数据质量与组成</strong>显著影响最终推理能力<br />
 - Mid-training 阶段的 reasoning data 质量比数量更重要<br />
 - RL 可以弥补 pre-training 的不足，但<strong>无法完全替代</strong>高质量的 pre-training 数据<br />
 - 对设计 code+reasoning 模型的训练 pipeline 有直接参考价值</p>
-<h3 id="54-scaling-agent">5.4 通过持续预训练 Scaling Agent</h3>
+<h3 id="54-通过持续预训练-scaling-agent">5.4 通过持续预训练 Scaling Agent<a class="headerlink" href="#54-通过持续预训练-scaling-agent" title="本节链接">&para;</a></h3>
 <p><strong>必读：</strong> <em>Scaling Agents via Continual Pre-training</em> (<a href="https://arxiv.org/abs/2506.03318">2506.03318</a>, 清华 &amp; 微软, 2025.06)</p>
 <p>核心发现：<br />
 - 提出 <strong>AgentCPT</strong> 框架，在 base LM 上持续预训练大规模 agent 轨迹数据<br />
@@ -523,24 +557,24 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 - <strong>数据量和计算量的 scaling 都可预测</strong><br />
 - 对 code agent 能力的训练有直接参考价值</p>
 <hr />
-<h2 id="code_2">六、Code 新范式探索</h2>
-<h3 id="61-code-world-models">6.1 Code World Models（代码世界模型）</h3>
+<h2 id="六code-新范式探索">六、Code 新范式探索<a class="headerlink" href="#六code-新范式探索" title="本节链接">&para;</a></h2>
+<h3 id="61-code-world-models代码世界模型">6.1 Code World Models（代码世界模型）<a class="headerlink" href="#61-code-world-models代码世界模型" title="本节链接">&para;</a></h3>
 <p><strong>必读：</strong> <em>CWM: An Open-Weights LLM for Research on Code Generation with World Models</em> (<a href="https://arxiv.org/abs/2506.04566">2506.04566</a>, Google DeepMind, 2025.06)</p>
 <p>核心思路：<br />
 - 训练 LLM <strong>模拟代码执行</strong>，生成 Python 程序的逐 token 执行轨迹<br />
 - 在 CRUXEval、MBPP-Exec、HumanEval-Exec 上达到 SOTA<br />
 - 超越远大于自己的模型<br />
 - 代表了 code 模型的新方向：从「生成代码」到「理解代码执行过程」</p>
-<h3 id="62-project">6.2 Project 级代码补全的预训练</h3>
+<h3 id="62-project-级代码补全的预训练">6.2 Project 级代码补全的预训练<a class="headerlink" href="#62-project-级代码补全的预训练" title="本节链接">&para;</a></h3>
 <p><strong>必读：</strong> <em>On Pretraining for Project-Level Code Completion</em> (<a href="https://arxiv.org/abs/2504.02220">2504.02220</a>, 南京大学, 2025.04)</p>
 <p>核心思路：<br />
 - 提出 <strong>RepoCoder-2.0</strong>，聚焦 project 级跨文件代码补全的预训练方法论<br />
 - 研究如何在预训练阶段有效组织跨文件上下文<br />
 - 对 repo 级 code 模型的数据组织有直接指导意义</p>
 <hr />
-<h2 id="_5">七、必读论文清单</h2>
-<h3 id="tier-1-code">Tier 1：必读（做 code 预训练前必须了解）</h3>
-<table>
+<h2 id="七必读论文清单">七、必读论文清单<a class="headerlink" href="#七必读论文清单" title="本节链接">&para;</a></h2>
+<h3 id="tier-1必读做-code-预训练前必须了解">Tier 1：必读（做 code 预训练前必须了解）<a class="headerlink" href="#tier-1必读做-code-预训练前必须了解" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>#</th>
@@ -581,9 +615,9 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>Code 45% 混合比例, 分阶段课程学习（已撤回）</td>
 </tr>
 </tbody>
-</table>
-<h3 id="tier-2">Tier 2：重要（最新进展 &amp; 训练策略）</h3>
-<table>
+</table></div>
+<h3 id="tier-2重要最新进展-训练策略">Tier 2：重要（最新进展 &amp; 训练策略）<a class="headerlink" href="#tier-2重要最新进展-训练策略" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>#</th>
@@ -624,9 +658,9 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>AgentCPT 框架，持续预训练 scaling agent</td>
 </tr>
 </tbody>
-</table>
-<h3 id="tier-3">Tier 3：前沿探索（新方向）</h3>
-<table>
+</table></div>
+<h3 id="tier-3前沿探索新方向">Tier 3：前沿探索（新方向）<a class="headerlink" href="#tier-3前沿探索新方向" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>#</th>
@@ -667,9 +701,9 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>Benchmark 污染审计</td>
 </tr>
 </tbody>
-</table>
-<h3 id="tier-4-survey">Tier 4：背景 Survey</h3>
-<table>
+</table></div>
+<h3 id="tier-4背景-survey">Tier 4：背景 Survey<a class="headerlink" href="#tier-4背景-survey" title="本节链接">&para;</a></h3>
+<div class="table-scroll" tabindex="0"><table>
 <thead>
 <tr>
 <th>#</th>
@@ -694,42 +728,42 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <td>数据优化综合 survey，含 code case study</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <hr />
-<h2 id="_6">八、实操建议</h2>
-<h3 id="_7">数据管线</h3>
+<h2 id="八实操建议">八、实操建议<a class="headerlink" href="#八实操建议" title="本节链接">&para;</a></h2>
+<h3 id="数据管线">数据管线<a class="headerlink" href="#数据管线" title="本节链接">&para;</a></h3>
 <ol>
 <li><strong>先读 OpenCoder + Qwen2.5-Coder</strong> — OpenCoder 给完全可复现的 pipeline，Qwen 给三阶段课程学习细节</li>
 <li><strong>Decontamination 是第一步不是最后一步</strong> — 先排除 benchmark leakage 再谈优化</li>
 <li><strong>从「轻度过滤」开始</strong>，不要一上来就重度清洗 — 2025 年的共识是宁可多留</li>
 <li><strong>分阶段课程学习</strong>：训练后期提高 code 比例，这是业界标准做法</li>
 </ol>
-<h3 id="repo">Repo 级 &amp; 长文</h3>
-<ol>
+<h3 id="repo-级-长文">Repo 级 &amp; 长文<a class="headerlink" href="#repo-级-长文" title="本节链接">&para;</a></h3>
+<ol start="5">
 <li><strong>Repo 级别的数据组织</strong>是 code 模型的核心竞争力，参考 <em>On Pretraining for Project-Level Code Completion</em></li>
 <li><strong>Midtrain 阶段做 progressive context extension</strong>，用真实 repo 代码而非 padding</li>
 </ol>
-<h3 id="scaling">Scaling &amp; 新方向</h3>
-<ol>
+<h3 id="scaling-新方向">Scaling &amp; 新方向<a class="headerlink" href="#scaling-新方向" title="本节链接">&para;</a></h3>
+<ol start="7">
 <li>关注 <strong>code 专用 scaling law</strong>（<em>Every Programming Language Matters</em>），不要直接套用 Chinchilla</li>
 <li>读 <em>Interplay of Pre-Training, Mid-Training, and RL</em> 理解训练阶段间的交互</li>
 <li>关注 <strong>CWM 世界模型</strong>方向 — 从生成代码到理解执行</li>
 </ol>
-<h3 id="_8">路线图建议</h3>
+<h3 id="路线图建议">路线图建议<a class="headerlink" href="#路线图建议" title="本节链接">&para;</a></h3>
 <pre><code>入门（1-2 天）: StarCoder2 → OpenCoder（建立 pipeline 直觉）
 核心（3-5 天）: Qwen2.5-Coder → DeepSeek-Coder-V2 → CodeGeeX4（掌握课程学习 + 混合策略）
 进阶（1 周）  : Every Programming Language Matters → Interplay 论文 → AgentCPT（理解 scaling + 阶段交互）
 前沿          : CWM → Project-Level Pretraining（探索新方向）
 </code></pre>
 <hr />
-<h2 id="_9">参考资料</h2>
-<h3 id="_10">技术报告</h3>
+<h2 id="参考资料">参考资料<a class="headerlink" href="#参考资料" title="本节链接">&para;</a></h2>
+<h3 id="技术报告">技术报告<a class="headerlink" href="#技术报告" title="本节链接">&para;</a></h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2402.19173">StarCoder2</a> | <a href="https://arxiv.org/abs/2405.04448">DeepSeek-Coder-V2</a> | <a href="https://arxiv.org/abs/2411.06485">OpenCoder</a></li>
 <li><a href="https://arxiv.org/abs/2412.14586">Qwen2.5-Coder</a> | <a href="https://arxiv.org/abs/2505.17448">CodeGeeX4</a> | <a href="https://arxiv.org/abs/2601.11659">Llama 4</a></li>
 <li><a href="https://arxiv.org/abs/2507.02847">Kimi K2</a> | <a href="https://arxiv.org/abs/2503.21404">MiniMax-01</a></li>
 </ul>
-<h3 id="_11">关键研究论文</h3>
+<h3 id="关键研究论文">关键研究论文<a class="headerlink" href="#关键研究论文" title="本节链接">&para;</a></h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2506.16327">Scaling Laws for Code: Every Programming Language Matters</a></li>
 <li><a href="https://arxiv.org/abs/2507.14320">On the Interplay of Pre-Training, Mid-Training, and RL</a></li>
@@ -737,12 +771,12 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
 <li><a href="https://arxiv.org/abs/2506.04566">CWM: Code World Models</a></li>
 <li><a href="https://arxiv.org/abs/2504.02220">On Pretraining for Project-Level Code Completion</a></li>
 </ul>
-<h3 id="_12">数据集</h3>
+<h3 id="数据集">数据集<a class="headerlink" href="#数据集" title="本节链接">&para;</a></h3>
 <ul>
 <li><a href="https://huggingface.co/bigcode/starcoder2">The Stack v2 &amp; StarCoder2</a> | <a href="https://github.com/allenai/dolma">Dolma</a></li>
 <li><a href="https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu">FineWeb-Edu</a> | <a href="https://github.com/bigcode-project">BigCode Project</a></li>
 </ul>
-<h3 id="_13">分析博客</h3>
+<h3 id="分析博客">分析博客<a class="headerlink" href="#分析博客" title="本节链接">&para;</a></h3>
 <ul>
 <li><a href="https://sebastianraschka.com/blog/">Sebastian Raschka 博客</a> — LLM 训练细节分析的最佳独立来源</li>
 </ul></div>
@@ -751,6 +785,11 @@ Kimi K2:          通用模型，code+math+synthetic 占显著份额（具体未
     </main>
   </div>
 </div>
-<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+<script>
+document.getElementById('MathJax-script').addEventListener('error', function() {
+  document.getElementById('mathRenderWarning').classList.add('visible');
+});
+</script>
+<script src="../../js/sidebar.js"></script>
 </body>
 </html>

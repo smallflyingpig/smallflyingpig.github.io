@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hello World - 我的博客系统搭建 - Jiguo Li</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
 <link rel="shortcut icon" href="../../jiguo.ico">
@@ -13,44 +13,19 @@
 <script>
 MathJax = {
   tex: {
-    inlineMath: [['$', '$'], ['\(', '\)']],
-    displayMath: [['$$', '$$'], ['\[', '\]']],
-    processEscapes: true
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
   },
   svg: {
     fontCache: 'global'
   }
 };
 </script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-
-<style>
-/* Table styles for markdown tables */
-.blog-detail-body table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 15px 0;
-  font-size: 14px;
-}
-.blog-detail-body table th,
-.blog-detail-body table td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}
-.blog-detail-body table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-}
-.blog-detail-body table tr:nth-child(even) {
-  background-color: #fafafa;
-}
-.blog-detail-body table tr:hover {
-  background-color: #f0f0f0;
-}
-</style>
+<script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
-<body>
+<body class="blog-post-page">
 <nav class="top-nav">
   <a href="../../index.html">Home</a>
   <a href="../index.html" class="active">Blog</a>
@@ -68,7 +43,10 @@ MathJax = {
       </div>
     </div>
   </aside>
-  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="sidebar-toggle" id="sidebarToggle" type="button"
+          aria-controls="sidebar" aria-expanded="false" aria-label="打开页面导航">☰</button>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" type="button"
+          aria-label="关闭页面导航" tabindex="-1"></button>
   <div class="main-content-wrapper">
     <main class="main-content">
       <article class="blog-detail-content">
@@ -77,9 +55,23 @@ MathJax = {
           <div class="blog-card-meta"><span class="blog-card-date">2024-04-23</span><span class="blog-card-cat tech">tech</span></div>
           <div class="blog-card-tags"><span class="tag-item">博客</span> <span class="tag-item">Web</span> <span class="tag-item">Python</span></div>
         </header>
-        <div class="blog-detail-body"><h2 id="_1">欢迎</h2>
+        <nav class="article-toc" aria-label="文章目录"><div class="article-toc-label">本文目录</div><div class="toc">
+<ul>
+<li><a href="#欢迎">欢迎</a></li>
+<li><a href="#技术方案">技术方案</a></li>
+<li><a href="#目录结构">目录结构</a></li>
+<li><a href="#构建流程">构建流程</a><ul>
+<li><a href="#代码示例">代码示例</a></li>
+</ul>
+</li>
+<li><a href="#总结">总结</a></li>
+</ul>
+</div>
+</nav>
+        <div class="math-render-warning" id="mathRenderWarning" role="status">公式组件加载失败，请刷新页面后重试。</div>
+        <div class="blog-detail-body"><h2 id="欢迎">欢迎<a class="headerlink" href="#欢迎" title="本节链接">&para;</a></h2>
 <p>这是我的第一篇技术博客。本文介绍如何搭建一个简单的静态博客系统。</p>
-<h2 id="_2">技术方案</h2>
+<h2 id="技术方案">技术方案<a class="headerlink" href="#技术方案" title="本节链接">&para;</a></h2>
 <p>博客系统采用以下技术：</p>
 <ul>
 <li><strong>Markdown</strong> 格式写作</li>
@@ -87,15 +79,15 @@ MathJax = {
 <li><strong>纯静态</strong> HTML，无需数据库</li>
 <li><strong>前端 JS</strong> 实现筛选功能</li>
 </ul>
-<h2 id="_3">目录结构</h2>
+<h2 id="目录结构">目录结构<a class="headerlink" href="#目录结构" title="本节链接">&para;</a></h2>
 <pre><code>_posts/           # Markdown 源文件
 blog/
   index.html      # 博客列表页
   posts/          # 生成的 HTML 文件
 </code></pre>
-<h2 id="_4">构建流程</h2>
+<h2 id="构建流程">构建流程<a class="headerlink" href="#构建流程" title="本节链接">&para;</a></h2>
 <p>运行 <code>python build_blog.py</code> 即可自动生成所有博客页面。</p>
-<h3 id="_5">代码示例</h3>
+<h3 id="代码示例">代码示例<a class="headerlink" href="#代码示例" title="本节链接">&para;</a></h3>
 <pre><code class="language-python">def build_blog():
     for md_file in POSTS_DIR.glob('*.md'):
         content = md_file.read_text()
@@ -103,7 +95,7 @@ blog/
         html = generate_post_html(metadata, body)
         output_file.write_text(html)
 </code></pre>
-<h2 id="_6">总结</h2>
+<h2 id="总结">总结<a class="headerlink" href="#总结" title="本节链接">&para;</a></h2>
 <p>这是一个简单、可扩展的博客方案。后续可以添加更多功能：</p>
 <ol>
 <li>评论系统</li>
@@ -116,6 +108,11 @@ blog/
     </main>
   </div>
 </div>
-<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}</script>
+<script>
+document.getElementById('MathJax-script').addEventListener('error', function() {
+  document.getElementById('mathRenderWarning').classList.add('visible');
+});
+</script>
+<script src="../../js/sidebar.js"></script>
 </body>
 </html>

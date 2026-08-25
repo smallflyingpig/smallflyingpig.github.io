@@ -463,7 +463,7 @@ mindmap
 
 - [Scaling Managed Agents: Decoupling the Brain from the Hands](https://www.anthropic.com/engineering/managed-agents) — Anthropic, 2026.02（本文核心参考）
 - [Building Effective Agents with Claude](https://www.anthropic.com/research/building-effective-agents) — Anthropic, 2025.06
-- [Introducing Claude Code](https://www.anthropic.com/research/claude-code) — Anthropic, 2025.02
+- [Claude 3.7 Sonnet and Claude Code](https://www.anthropic.com/news/claude-3-7-sonnet) — Anthropic, 2025.02
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) — Agentic Loop 的理论基础
 - [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) — 工具接入协议
 - [Claude Agent SDK Python](https://github.com/anthropics/claude-agent-sdk-python) — SDK 实现

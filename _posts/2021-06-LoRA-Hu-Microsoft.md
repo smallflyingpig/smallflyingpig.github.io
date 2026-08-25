@@ -219,11 +219,11 @@ mindmap
 
 ## 参考文献
 
-- Aghajanyan et al. "Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning." arXiv:2012.13255, 2020.
-- Brown et al. "Language Models are Few-Shot Learners." arXiv:2005.14165, 2020.
-- Houlsby et al. "Parameter-Efficient Transfer Learning for NLP." arXiv:1902.00751, 2019.
-- Li & Liang. "Prefix-Tuning: Optimizing Continuous Prompts for Generation." arXiv:2101.00190, 2021.
-- Li et al. "Measuring the Intrinsic Dimension of Objective Landscapes." arXiv:1804.08838, 2018.
-- Liu et al. "RoBERTa: A Robustly Optimized BERT Pretraining Approach." 2019.
-- He et al. "DeBERTa: Decoding-enhanced BERT with Disentangled Attention." 2021.
-- Vaswani et al. "Attention is All You Need." NeurIPS, 2017.
+- [Aghajanyan et al. “Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning.”](https://arxiv.org/abs/2012.13255), 2020.
+- [Brown et al. “Language Models are Few-Shot Learners.”](https://arxiv.org/abs/2005.14165), 2020.
+- [Houlsby et al. “Parameter-Efficient Transfer Learning for NLP.”](https://arxiv.org/abs/1902.00751), 2019.
+- [Li & Liang. “Prefix-Tuning: Optimizing Continuous Prompts for Generation.”](https://arxiv.org/abs/2101.00190), 2021.
+- [Li et al. “Measuring the Intrinsic Dimension of Objective Landscapes.”](https://arxiv.org/abs/1804.08838), 2018.
+- [Liu et al. “RoBERTa: A Robustly Optimized BERT Pretraining Approach.”](https://arxiv.org/abs/1907.11692), 2019.
+- [He et al. “DeBERTa: Decoding-enhanced BERT with Disentangled Attention.”](https://arxiv.org/abs/2006.03654), 2021.
+- [Vaswani et al. “Attention is All You Need.”](https://arxiv.org/abs/1706.03762), NeurIPS 2017.

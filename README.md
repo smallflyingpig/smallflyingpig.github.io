@@ -8,3 +8,14 @@ Email: jgli AT fudan.edu.cn / jiguo.li AT vipl.ict.ac.cn / jiguo_li AT qq.com
 
 
 This homepage is forked and edited from https://github.com/liu-xb/liu-xb.github.io, and also welcome to fork the source code of my homepage.
+
+## Build the blog
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python build_blog.py
+node --test tests/*.test.cjs
+```
+
+The generated HTML under `blog/posts/` is committed so GitHub Pages can serve it directly.

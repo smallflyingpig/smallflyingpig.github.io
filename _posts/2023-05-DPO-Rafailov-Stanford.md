@@ -220,7 +220,7 @@ mindmap
 - **ORPO**: Monolithic Preference Optimization without Reference Model (Hong et al., 2024)
 
 ## 参考文献
-1. Ouyang et al. (2022) - Training language models to follow instructions with human feedback
-2. Schulman et al. (2017) - Proximal Policy Optimization Algorithms
-3. Stiennon et al. (2020) - Learning to summarize from human feedback
-4. Bai et al. (2022) - Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback
+1. [Ouyang et al. “Training Language Models to Follow Instructions with Human Feedback.”](https://arxiv.org/abs/2203.02155), 2022.
+2. [Schulman et al. “Proximal Policy Optimization Algorithms.”](https://arxiv.org/abs/1707.06347), 2017.
+3. [Stiennon et al. “Learning to Summarize from Human Feedback.”](https://arxiv.org/abs/2009.01325), 2020.
+4. [Bai et al. “Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback.”](https://arxiv.org/abs/2204.05862), 2022.

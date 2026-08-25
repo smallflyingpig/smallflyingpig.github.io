@@ -1,21 +1,31 @@
 #!/usr/bin/env python3
-"""Blog build script with LaTeX and table support."""
+"""Build the static blog with protected LaTeX and academic article markup."""
 
-import json, re
+import html
+import json
+import re
 from pathlib import Path
 
 try:
     import markdown
-    from markdown.extensions.tables import TableExtension
-    HAS_MD = True
-except ImportError:
-    HAS_MD = False
-    print("Warning: markdown library not installed. Run: pip install markdown")
+    from markdown.extensions.toc import slugify_unicode
+except ImportError as exc:
+    raise SystemExit(
+        "Python Markdown is required. Run: "
+        "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+    ) from exc
 
 BASE = Path(__file__).parent
 POSTS = BASE / "_posts"
 BLOG = BASE / "blog"
 OUT = BLOG / "posts"
+MATH_PATTERN = re.compile(
+    r"\$\$[\s\S]+?\$\$"
+    r"|\\\[[\s\S]+?\\\]"
+    r"|(?<!\\)\$(?!\$)[^\n]+?(?<!\\)\$"
+    r"|\\\([^\n]+?\\\)"
+)
+FENCED_CODE_PATTERN = re.compile(r"(```[\s\S]*?```|~~~[\s\S]*?~~~)")
 
 def parse_fm(c):
     if not c.startswith('---'): return {}, c
@@ -35,26 +45,75 @@ def slug(f):
     n = f.stem
     return n[11:] if re.match(r'\d{4}-\d{2}-\d{2}-', n) else n
 
-def render(b):
-    if HAS_MD:
-        # Use markdown with tables extension
-        md = markdown.Markdown(extensions=[
-            'fenced_code',
-            'tables',
-            'toc',
-            'nl2br'
-        ])
-        html = md.convert(b)
-        # Keep LaTeX formulas as-is (will be rendered by MathJax in browser)
-        return html
-    return '\n'.join(f'<p>{p}</p>' for p in b.split('\n\n') if p)
+def strip_redundant_title(body, title):
+    """Remove a leading Markdown H1 when the page header already shows it."""
+    match = re.match(r"^\s*#\s+(.+?)\s*(?:\n|$)", body)
+    if match and match.group(1).strip() == title.strip():
+        return body[match.end():].lstrip()
+    return body
+
+
+def protect_math(body):
+    """Hide TeX from Markdown emphasis/link parsing, excluding fenced code."""
+    formulas = []
+
+    def replace_formula(match):
+        token = f"MATHPLACEHOLDERZ{len(formulas)}Z"
+        formulas.append(html.escape(match.group(0), quote=False))
+        return token
+
+    parts = FENCED_CODE_PATTERN.split(body)
+    for index in range(0, len(parts), 2):
+        parts[index] = MATH_PATTERN.sub(replace_formula, parts[index])
+    return ''.join(parts), formulas
+
+
+def restore_math(rendered, formulas):
+    for index, formula in enumerate(formulas):
+        rendered = rendered.replace(f"MATHPLACEHOLDERZ{index}Z", formula)
+        rendered = rendered.replace(f"mathplaceholderz{index}z", f"math-{index + 1}")
+    return rendered
+
+
+def render_document(body, title=""):
+    body = strip_redundant_title(body, title)
+    protected, formulas = protect_math(body)
+    md = markdown.Markdown(
+        extensions=['fenced_code', 'tables', 'toc', 'nl2br', 'footnotes', 'sane_lists'],
+        extension_configs={
+            'toc': {
+                'slugify': slugify_unicode,
+                'permalink': True,
+                'permalink_title': '本节链接',
+                'toc_depth': '2-3',
+            }
+        },
+    )
+    rendered = restore_math(md.convert(protected), formulas)
+    toc = restore_math(md.toc, formulas)
+    rendered = re.sub(
+        r'(<table>[\s\S]*?</table>)',
+        r'<div class="table-scroll" tabindex="0">\1</div>',
+        rendered,
+    )
+    return rendered, toc
+
+
+def render(body):
+    """Render Markdown body; kept as a small public seam for regression tests."""
+    return render_document(body)[0]
 
 def gen(m, b, s):
-    h = render(b)
+    h, toc = render_document(b, m.get('title', ''))
     cat = m.get('category', 'other')
     tg = m.get('tags', [])
     if isinstance(tg, str): tg = [tg]
     tg_h = ' '.join(f'<span class="tag-item">{t}</span>' for t in tg)
+    toc_h = (
+        f'<nav class="article-toc" aria-label="文章目录">'
+        f'<div class="article-toc-label">本文目录</div>{toc}</nav>'
+        if toc else ''
+    )
     
     return f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -62,7 +121,7 @@ def gen(m, b, s):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{m.get("title","Post")} - Jiguo Li</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
 <link rel="shortcut icon" href="../../jiguo.ico">
@@ -71,44 +130,19 @@ def gen(m, b, s):
 <script>
 MathJax = {{
   tex: {{
-    inlineMath: [['$', '$'], ['\\(', '\\)']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]']],
-    processEscapes: true
+    inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+    displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+    processEscapes: true,
+    processEnvironments: true
   }},
   svg: {{
     fontCache: 'global'
   }}
 }};
 </script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-
-<style>
-/* Table styles for markdown tables */
-.blog-detail-body table {{
-  border-collapse: collapse;
-  width: 100%;
-  margin: 15px 0;
-  font-size: 14px;
-}}
-.blog-detail-body table th,
-.blog-detail-body table td {{
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}}
-.blog-detail-body table th {{
-  background-color: #f5f5f5;
-  font-weight: 600;
-}}
-.blog-detail-body table tr:nth-child(even) {{
-  background-color: #fafafa;
-}}
-.blog-detail-body table tr:hover {{
-  background-color: #f0f0f0;
-}}
-</style>
+<script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
-<body>
+<body class="blog-post-page">
 <nav class="top-nav">
   <a href="../../index.html">Home</a>
   <a href="../index.html" class="active">Blog</a>
@@ -126,7 +160,10 @@ MathJax = {{
       </div>
     </div>
   </aside>
-  <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="sidebar-toggle" id="sidebarToggle" type="button"
+          aria-controls="sidebar" aria-expanded="false" aria-label="打开页面导航">☰</button>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" type="button"
+          aria-label="关闭页面导航" tabindex="-1"></button>
   <div class="main-content-wrapper">
     <main class="main-content">
       <article class="blog-detail-content">
@@ -135,13 +172,20 @@ MathJax = {{
           <div class="blog-card-meta"><span class="blog-card-date">{m.get("date","")}</span><span class="blog-card-cat {cat}">{cat}</span></div>
           <div class="blog-card-tags">{tg_h}</div>
         </header>
+        {toc_h}
+        <div class="math-render-warning" id="mathRenderWarning" role="status">公式组件加载失败，请刷新页面后重试。</div>
         <div class="blog-detail-body">{h}</div>
         <a href="../index.html" class="blog-back">← 返回博客列表</a>
       </article>
     </main>
   </div>
 </div>
-<script>function toggleSidebar(){{document.getElementById('sidebar').classList.toggle('collapsed');}}</script>
+<script>
+document.getElementById('MathJax-script').addEventListener('error', function() {{
+  document.getElementById('mathRenderWarning').classList.add('visible');
+}});
+</script>
+<script src="../../js/sidebar.js"></script>
 </body>
 </html>'''
 
