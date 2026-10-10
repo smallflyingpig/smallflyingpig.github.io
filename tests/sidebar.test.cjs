@@ -71,6 +71,9 @@ function createPage({ mobile }) {
   const toggle = new FakeTarget();
   const backdrop = new FakeTarget();
   const sectionLink = new FakeTarget();
+  const heading = new FakeTarget();
+  heading.focusCount = 0;
+  heading.focus = () => { heading.focusCount++; };
   sidebar.querySelectorAll = (selector) => selector === 'a[href^="#"]' ? [sectionLink] : [];
 
   const documentTarget = new FakeTarget();
@@ -78,6 +81,7 @@ function createPage({ mobile }) {
     sidebar,
     sidebarToggle: toggle,
     sidebarBackdrop: backdrop,
+    pageTitle: heading,
   })[id] || null;
 
   const windowTarget = new FakeTarget();
@@ -88,6 +92,7 @@ function createPage({ mobile }) {
     toggle,
     backdrop,
     sectionLink,
+    heading,
     document: documentTarget,
     window: windowTarget,
     closeWith(target) {
@@ -134,4 +139,26 @@ test('desktop menu keeps the existing collapsed sidebar behavior', () => {
 
   assert.equal(page.sidebar.classList.contains('collapsed'), true);
   assert.equal(page.toggle.getAttribute('aria-expanded'), 'false');
+});
+
+
+test('dynamic blog filters close mobile drawer and focus results, but preserve desktop focus', () => {
+  for (const mobile of [true, false]) {
+    for (const kind of ['cat', 'tag', 'year']) {
+      const page = createPage({ mobile });
+      initSidebar(page.document, page.window);
+      if (mobile) page.toggle.dispatch('click');
+      const filter = new FakeTarget();
+      filter.closest = (selector) => selector.includes(`button[data-${kind}]`) ? filter : null;
+      page.sidebar.dispatch('click', { target: filter });
+      assert.equal(page.heading.focusCount, mobile ? 1 : 0, `${kind}: focus`);
+      if (mobile) {
+        assert.equal(page.sidebar.classList.contains('mobile-open'), false);
+        assert.equal(page.toggle.getAttribute('aria-expanded'), 'false');
+      } else {
+        assert.equal(page.sidebar.classList.contains('collapsed'), false);
+        assert.equal(page.toggle.getAttribute('aria-expanded'), 'true');
+      }
+    }
+  }
 });

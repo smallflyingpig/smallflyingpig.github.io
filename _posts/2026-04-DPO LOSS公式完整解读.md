@@ -3,7 +3,7 @@ title: DPO LOSS公式完整解读
 date: 2026-04-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: $$\mathcal{L}_{DPO} = -\mathbb{E}_{(x, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta \log \frac{\...
+excerpt: 从符号含义和数值示例理解 DPO 损失，逐步推导偏好优化目标，并解释参考策略、概率比与温度参数的作用。
 ---
 
 # DPO LOSS公式完整解读

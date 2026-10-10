@@ -3,7 +3,7 @@ title: 大模型强化学习 PPO 与 GRPO 十问十答
 date: 2026-04-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: 随着 DeepSeek R1 的火爆，GRPO 算法走入了大众视野。作为 RLHF 的两大支柱，PPO（近端策略优化）与 GRPO（组相对策略优化）在架构和逻辑上有何异同？本文通过十个核心问题，带你拆解它们的底层机理。 在 `verl` 框架及大模型强化学习的标准实现中，PPO 和 GRPO 的 L...
+excerpt: 通过十个核心问题对比 PPO 与 GRPO，解析采样、奖励、优势估计和策略更新流程，以及 Critic、KL 约束与训练稳定性。
 ---
 
 # 大模型强化学习 PPO 与 GRPO 十问十答

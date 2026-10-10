@@ -3,7 +3,7 @@ title: Anthropic Agent 架构全景解读
 date: 2026-04-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: 一个裸 LLM 只能做一件事：**给定输入，生成输出**（`prompt → completion`）。 ``` 用户: "巴黎天气如何？" LLM:  "巴黎今天15°C，多云转晴。" ``` Agent 在此基础上加了三样东西： | 增量能力 | 作用 | 类比 | |----------|--...
+excerpt: 从工具调用、自主循环与状态管理出发，梳理 Anthropic Agent 架构中 Harness、Session 和 Sandbox 等模块的职责与协作关系。
 ---
 
 # Anthropic Agent 架构全景解读

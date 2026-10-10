@@ -3,7 +3,7 @@ title: LoRA: Low-Rank Adaptation of Large Language Models
 date: 2021-06-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: LoRA: Low-Rank Adaptation of Large Language Models - **作者**: Edward Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wan...
+excerpt: 解读 LoRA 如何通过低秩矩阵实现参数高效微调，梳理其设计动机、权重合并方式，以及与 Adapter、Prefix Tuning 的差异。
 ---
 
 # LoRA: Low-Rank Adaptation of Large Language Models

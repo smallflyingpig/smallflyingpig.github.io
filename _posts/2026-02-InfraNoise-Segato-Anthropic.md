@@ -3,7 +3,7 @@ title: Quantifying Infrastructure Noise in Agentic Coding Evals
 date: 2026-02-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: Quantifying Infrastructure Noise in Agentic Coding Evals - **作者**: Gian Segato, Nicholas Carlini, Jeremy Hadfield, Mike Merrill, Alex Shaw -...
+excerpt: 讨论计算资源、运行时限制与基础设施故障如何影响 Agent 编码评测，梳理实验发现及评估环境标准化的建议。
 ---
 
 # Quantifying Infrastructure Noise in Agentic Coding Evals

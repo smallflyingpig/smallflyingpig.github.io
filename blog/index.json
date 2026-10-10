@@ -8,7 +8,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "World Model（世界模型）是当前具身智能（Embodied AI）领域最受关注的技术路线之一。从 LeCun 提出 JEPA、OpenAI 用 Sora 定义\"视频生成即世界模拟器\"，到 DeepMind 用 Genie 生成可交互环境，这条路线在近三年快速演进。本文梳理 World Mod...",
+    "excerpt": "梳理世界模型要解决的问题、主要技术路线与代表工作，比较潜在动力学、JEPA、扩散和自回归方法，并讨论规划与具身智能中的挑战。",
     "slug": "2026-04-World Model：过去、现在和未来"
   },
   {
@@ -20,7 +20,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "随着 DeepSeek R1 的火爆，GRPO 算法走入了大众视野。作为 RLHF 的两大支柱，PPO（近端策略优化）与 GRPO（组相对策略优化）在架构和逻辑上有何异同？本文通过十个核心问题，带你拆解它们的底层机理。 在 `verl` 框架及大模型强化学习的标准实现中，PPO 和 GRPO 的 L...",
+    "excerpt": "通过十个核心问题对比 PPO 与 GRPO，解析采样、奖励、优势估计和策略更新流程，以及 Critic、KL 约束与训练稳定性。",
     "slug": "2026-04-LLM RL PPO&GRPO 十问十答"
   },
   {
@@ -32,7 +32,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "$$\\mathcal{L}_{DPO} = -\\mathbb{E}_{(x, y_w, y_l)} \\left[ \\log \\sigma \\left( \\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{ref}(y_w|x)} - \\beta \\log \\frac{\\...",
+    "excerpt": "从符号含义和数值示例理解 DPO 损失，逐步推导偏好优化目标，并解释参考策略、概率比与温度参数的作用。",
     "slug": "2026-04-DPO LOSS公式完整解读"
   },
   {
@@ -44,7 +44,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "做 code 预训练，先了解头部模型的训练方案是最高效的入门方式： | 模型 | arXiv | 时间 | 总 Tokens | 架构 | Code 占比 | 核心特点 | |",
+    "excerpt": "围绕代码预训练数据，整理主流模型技术报告与关键文献，比较数据混合、仓库级组织、去重、质量过滤和 Scaling Laws。",
     "slug": "2026-04-CodePretrainData-Survey"
   },
   {
@@ -56,7 +56,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "一个裸 LLM 只能做一件事：**给定输入，生成输出**（`prompt → completion`）。 ``` 用户: \"巴黎天气如何？\" LLM:  \"巴黎今天15°C，多云转晴。\" ``` Agent 在此基础上加了三样东西： | 增量能力 | 作用 | 类比 | |",
+    "excerpt": "从工具调用、自主循环与状态管理出发，梳理 Anthropic Agent 架构中 Harness、Session 和 Sandbox 等模块的职责与协作关系。",
     "slug": "2026-04-Anthropic-Agent架构全景解读"
   },
   {
@@ -68,7 +68,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS - **作者**: 多个机构合作（Berkeley AI Research, CMU, Stanford 等）...",
+    "excerpt": "介绍 TerminalBench 如何在真实终端环境中评估 LLM Agent，梳理任务设计、评测流程与指标，以及模型能力的局限。",
     "slug": "2026-03-TerminalBench-Berkeley"
   },
   {
@@ -80,7 +80,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: Scaling Managed Agents: Decoupling the Brain from the Hands - **作者**: Lance Martin, Gabe Cemaj, Michael Cohen - **机构**: Anthropic - **发表时间**...",
+    "excerpt": "解读 Managed Agents 的“脑手分离”架构，梳理推理、执行与会话状态的解耦方式，以及接口设计、故障恢复和凭证隔离。",
     "slug": "2026-02-ManagedAgents-Martin-Anthropic"
   },
   {
@@ -92,7 +92,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: Quantifying Infrastructure Noise in Agentic Coding Evals - **作者**: Gian Segato, Nicholas Carlini, Jeremy Hadfield, Mike Merrill, Alex Shaw -...",
+    "excerpt": "讨论计算资源、运行时限制与基础设施故障如何影响 Agent 编码评测，梳理实验发现及评估环境标准化的建议。",
     "slug": "2026-02-InfraNoise-Segato-Anthropic"
   },
   {
@@ -116,7 +116,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models - **作者**: Yukang Chen, Shengju Qian, Haotian Tang, Xin Liao, Jizhong H...",
+    "excerpt": "解读 LongLoRA 的长上下文微调方案，介绍低秩适配、移位短注意力与位置编码扩展，以及训练和推理阶段的不同设计。",
     "slug": "2023-09-LongLoRA-Chen-CUHK"
   },
   {
@@ -128,7 +128,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: Direct Preference Optimization: Your Language Model is Secretly a Reward Model - **作者**: Rafael Rafailov, Joey Hejna, Ryan Dill, Chelsea Fin...",
+    "excerpt": "介绍 DPO 如何从偏好数据直接优化语言模型，推导其目标函数，并比较它与传统 RLHF、PPO 在训练流程和计算开销上的差异。",
     "slug": "2023-05-DPO-Rafailov-Stanford"
   },
   {
@@ -140,7 +140,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models - **作者**: Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Bria...",
+    "excerpt": "梳理思维链提示如何利用包含中间推理步骤的示例，改善大语言模型的算术、常识与符号推理，并讨论适用条件和局限。",
     "slug": "2022-01-Chain-of-Thought-Wei-Google"
   },
   {
@@ -152,7 +152,7 @@
       "AI",
       "Papers"
     ],
-    "excerpt": "- **标题**: LoRA: Low-Rank Adaptation of Large Language Models - **作者**: Edward Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wan...",
+    "excerpt": "解读 LoRA 如何通过低秩矩阵实现参数高效微调，梳理其设计动机、权重合并方式，以及与 Adapter、Prefix Tuning 的差异。",
     "slug": "2021-06-LoRA-Hu-Microsoft"
   }
 ]

@@ -3,7 +3,7 @@ title: LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models
 date: 2023-09-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models - **作者**: Yukang Chen, Shengju Qian, Haotian Tang, Xin Liao, Jizhong H...
+excerpt: 解读 LongLoRA 的长上下文微调方案，介绍低秩适配、移位短注意力与位置编码扩展，以及训练和推理阶段的不同设计。
 ---
 
 # LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models
