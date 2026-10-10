@@ -3,7 +3,7 @@ title: Direct Preference Optimization: Your Language Model is Secretly a Reward 
 date: 2023-05-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: Direct Preference Optimization: Your Language Model is Secretly a Reward Model - **作者**: Rafael Rafailov, Joey Hejna, Ryan Dill, Chelsea Fin...
+excerpt: 介绍 DPO 如何从偏好数据直接优化语言模型，推导其目标函数，并比较它与传统 RLHF、PPO 在训练流程和计算开销上的差异。
 ---
 
 # Direct Preference Optimization: Your Language Model is Secretly a Reward Model

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anthropic Agent 架构全景解读 - Jiguo Li</title>
+<meta name="description" content="从工具调用、自主循环与状态管理出发，梳理 Anthropic Agent 架构中 Harness、Session 和 Sandbox 等模块的职责与协作关系。">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
@@ -33,7 +34,7 @@ MathJax = {
   </div>
   <div class="language-switch" aria-label="语言切换">
     <span class="language-option active" aria-current="true">中文</span>
-    <a class="language-option" href="../../index.html" hreflang="en">EN</a>
+    <span class="language-option unavailable" aria-disabled="true" aria-label="EN（英文博客暂未提供）" title="英文博客暂未提供">EN</span>
   </div>
 </nav>
 <div class="page-wrapper">
@@ -41,7 +42,7 @@ MathJax = {
     <div class="sidebar-header">
       <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
       <h1 class="sidebar-name">Jiguo Li</h1>
-      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <p class="sidebar-title">Senior Engineer @ Meituan</p>
       <div class="profile-links">
         <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
         <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
@@ -54,15 +55,21 @@ MathJax = {
           aria-label="关闭页面导航" tabindex="-1"></button>
   <div class="main-content-wrapper">
     <main class="main-content">
+      <div class="mobile-identity">
+        <img src="../../img/jiguo.png" alt="" width="56" height="56">
+        <div>
+          <p class="mobile-identity-name">Jiguo Li</p>
+          <p class="mobile-identity-title">Senior Engineer @ Meituan</p>
+        </div>
+      </div>
       <article class="blog-detail-content">
         <header class="blog-detail-header">
           <h1 class="blog-detail-title">Anthropic Agent 架构全景解读</h1>
-          <div class="blog-card-meta"><span class="blog-card-date">2026-04-01</span><span class="blog-card-cat tech">tech</span></div>
+          <div class="blog-card-meta"><time class="blog-card-date" datetime="2026-04-01">2026-04-01</time><span class="blog-card-cat tech">技术</span></div>
           <div class="blog-card-tags"><span class="tag-item">LLM</span> <span class="tag-item">AI</span> <span class="tag-item">Papers</span></div>
         </header>
         <nav class="article-toc" aria-label="文章目录"><div class="article-toc-label">本文目录</div><div class="toc">
 <ul>
-<li><a href="#-">-------|--...</a></li>
 <li><a href="#一从-llm-到-agent到底多了什么">一、从 LLM 到 Agent：到底多了什么？</a></li>
 <li><a href="#二harness到底什么意思">二、Harness：到底什么意思？</a><ul>
 <li><a href="#21-一句话定义">2.1 一句话定义</a></li>
@@ -95,9 +102,7 @@ MathJax = {
 </div>
 </nav>
         <div class="math-render-warning" id="mathRenderWarning" role="status">公式组件加载失败，请刷新页面后重试。</div>
-        <div class="blog-detail-body"><h2 id="-">-------|--...<a class="headerlink" href="#-" title="本节链接">&para;</a></h2>
-<h1 id="anthropic-agent-架构全景解读">Anthropic Agent 架构全景解读<a class="headerlink" href="#anthropic-agent-架构全景解读" title="本节链接">&para;</a></h1>
-<blockquote>
+        <div class="blog-detail-body"><blockquote>
 <p>本文基于 Anthropic 官方论文 <em>Scaling Managed Agents: Decoupling the Brain from the Hands</em>（2026.02）及 Claude Agent SDK 文档，系统梳理 Agent 架构中各模块的定义、边界与协作关系。<br />
 前置要求：了解 LLM 基础概念（Token、上下文窗口、Tool Use / Function Calling），知道 ReAct 范式即可。</p>
 </blockquote>

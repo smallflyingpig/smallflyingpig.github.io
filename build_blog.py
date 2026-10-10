@@ -4,6 +4,7 @@
 import html
 import json
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 try:
@@ -27,11 +28,69 @@ MATH_PATTERN = re.compile(
 )
 FENCED_CODE_PATTERN = re.compile(r"(```[\s\S]*?```|~~~[\s\S]*?~~~)")
 
+
+class ExcerptText(HTMLParser):
+    """Extract readable prose without markup, code, tables, or hidden content."""
+
+    excluded = {'script', 'style', 'pre', 'table', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
+    blocks = {'p', 'div', 'li', 'blockquote', 'br'}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parts = []
+        self.hidden = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.excluded:
+            self.hidden.append(tag)
+        elif not self.hidden and tag in self.blocks:
+            self.parts.append(' ')
+
+    def handle_endtag(self, tag):
+        if self.hidden:
+            if tag == self.hidden[-1]:
+                self.hidden.pop()
+        elif tag in self.blocks:
+            self.parts.append(' ')
+
+    def handle_data(self, data):
+        if not self.hidden:
+            self.parts.append(data)
+
+
+def plain_excerpt(source, limit=150):
+    """Strip Markdown and TeX before truncating, so cards never show fragments."""
+    source = FENCED_CODE_PATTERN.sub(' ', source)
+    source = re.sub(r'(?:```|~~~)[\s\S]*$', ' ', source)
+    source = MATH_PATTERN.sub(' ', source)
+    # A manually clipped excerpt may end halfway through a formula.
+    source = re.sub(r'(?<!\\)\$[^\n]*|\\[\[(][^\n]*', ' ', source)
+    parser = ExcerptText()
+    parser.feed(markdown.markdown(source, extensions=['tables', 'fenced_code']))
+    parser.close()
+    text = re.sub(r'\s+', ' ', ''.join(parser.parts)).strip()
+    if len(text) <= limit:
+        return text
+    shortened = text[:limit].rstrip()
+    # Prefer a complete sentence if one ends near the length limit.
+    ends = [shortened.rfind(mark) for mark in ('。', '！', '？', '. ', '! ', '? ')]
+    last_end = max(ends)
+    if last_end >= limit // 2:
+        return shortened[:last_end + 1]
+    return shortened + '…'
+
+
+def excerpt(meta, body):
+    return plain_excerpt(str(meta.get('excerpt', ''))) or plain_excerpt(body) or '暂无摘要。'
+
 def parse_fm(c):
-    if not c.startswith('---'): return {}, c
-    end = c.find('---', 3)
-    if end == -1: return {}, c
-    fm, body = c[3:end].strip(), c[end+3:].strip()
+    opening = re.match(r'\A---[ \t]*\r?\n', c)
+    if not opening: return {}, c
+    closing = re.search(r'^---[ \t]*\r?$', c[opening.end():], re.MULTILINE)
+    if not closing: return {}, c
+    end = opening.end() + closing.start()
+    body_start = opening.end() + closing.end()
+    fm, body = c[opening.end():end].strip(), c[body_start:].strip()
     m = {}
     for l in fm.split('\n'):
         if ':' in l:
@@ -106,9 +165,14 @@ def render(body):
 def gen(m, b, s):
     h, toc = render_document(b, m.get('title', ''))
     cat = m.get('category', 'other')
+    cat_class = cat if cat in ('tech', 'essay', 'other') else 'other'
+    cat_label = {'tech': '技术', 'essay': '随笔', 'other': '其他'}[cat_class]
+    title = html.escape(str(m.get('title', 'Untitled')))
+    date = html.escape(str(m.get('date', '')))
+    description = html.escape(excerpt(m, b))
     tg = m.get('tags', [])
     if isinstance(tg, str): tg = [tg]
-    tg_h = ' '.join(f'<span class="tag-item">{t}</span>' for t in tg)
+    tg_h = ' '.join(f'<span class="tag-item">{html.escape(str(t))}</span>' for t in tg)
     toc_h = (
         f'<nav class="article-toc" aria-label="文章目录">'
         f'<div class="article-toc-label">本文目录</div>{toc}</nav>'
@@ -120,7 +184,8 @@ def gen(m, b, s):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{m.get("title","Post")} - Jiguo Li</title>
+<title>{title} - Jiguo Li</title>
+<meta name="description" content="{description}">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../css/main.css">
 <link rel="stylesheet" href="../../css/blog.css">
@@ -150,7 +215,7 @@ MathJax = {{
   </div>
   <div class="language-switch" aria-label="语言切换">
     <span class="language-option active" aria-current="true">中文</span>
-    <a class="language-option" href="../../index.html" hreflang="en">EN</a>
+    <span class="language-option unavailable" aria-disabled="true" aria-label="EN（英文博客暂未提供）" title="英文博客暂未提供">EN</span>
   </div>
 </nav>
 <div class="page-wrapper">
@@ -158,7 +223,7 @@ MathJax = {{
     <div class="sidebar-header">
       <img src="../../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
       <h1 class="sidebar-name">Jiguo Li</h1>
-      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <p class="sidebar-title">Senior Engineer @ Meituan</p>
       <div class="profile-links">
         <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
         <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
@@ -171,10 +236,17 @@ MathJax = {{
           aria-label="关闭页面导航" tabindex="-1"></button>
   <div class="main-content-wrapper">
     <main class="main-content">
+      <div class="mobile-identity">
+        <img src="../../img/jiguo.png" alt="" width="56" height="56">
+        <div>
+          <p class="mobile-identity-name">Jiguo Li</p>
+          <p class="mobile-identity-title">Senior Engineer @ Meituan</p>
+        </div>
+      </div>
       <article class="blog-detail-content">
         <header class="blog-detail-header">
-          <h1 class="blog-detail-title">{m.get("title","Untitled")}</h1>
-          <div class="blog-card-meta"><span class="blog-card-date">{m.get("date","")}</span><span class="blog-card-cat {cat}">{cat}</span></div>
+          <h1 class="blog-detail-title">{title}</h1>
+          <div class="blog-card-meta"><time class="blog-card-date" datetime="{date}">{date}</time><span class="blog-card-cat {cat_class}">{cat_label}</span></div>
           <div class="blog-card-tags">{tg_h}</div>
         </header>
         {toc_h}
@@ -210,7 +282,7 @@ def build():
             'date': m.get('date', ''),
             'category': m.get('category', 'other'),
             'tags': tg,
-            'excerpt': m.get('excerpt', b[:150] + '...'),
+            'excerpt': excerpt(m, b),
             'slug': s
         })
     (BLOG / 'index.json').write_text(json.dumps(idx, indent=2, ensure_ascii=False), encoding='utf-8')

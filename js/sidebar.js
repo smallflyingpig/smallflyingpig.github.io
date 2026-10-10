@@ -53,6 +53,19 @@
       });
     });
 
+    // Blog filters are dynamic buttons, so delegate instead of capturing a
+    // fixed list. On phones, reveal the updated results and move keyboard
+    // focus out of the now-hidden drawer; desktop focus stays on the filter.
+    sidebar.addEventListener('click', (event) => {
+      const filter = event.target.closest && event.target.closest(
+        'button[data-cat], button[data-tag], button[data-year]',
+      );
+      if (!filter || !isMobile()) return;
+      closeMobileSidebar();
+      const heading = documentRef.getElementById('pageTitle');
+      if (heading) heading.focus();
+    });
+
     windowRef.addEventListener('resize', () => {
       if (isMobile()) {
         closeMobileSidebar();

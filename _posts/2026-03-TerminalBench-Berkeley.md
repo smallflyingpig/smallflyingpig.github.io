@@ -3,7 +3,7 @@ title: TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TER
 date: 2026-03-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS - **作者**: 多个机构合作（Berkeley AI Research, CMU, Stanford 等）...
+excerpt: 介绍 TerminalBench 如何在真实终端环境中评估 LLM Agent，梳理任务设计、评测流程与指标，以及模型能力的局限。
 ---
 
 # TERMINALBENCH: A BENCHMARK FOR END-TO-END EVALUATION OF LLM AGENTS ON TERMINAL TASKS

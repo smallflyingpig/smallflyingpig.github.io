@@ -3,7 +3,7 @@ title: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
 date: 2022-01-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models - **作者**: Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Bria...
+excerpt: 梳理思维链提示如何利用包含中间推理步骤的示例，改善大语言模型的算术、常识与符号推理，并讨论适用条件和局限。
 ---
 
 # Chain-of-Thought Prompting Elicits Reasoning in Large Language Models

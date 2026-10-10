@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../css/blog.css">
   <link rel="shortcut icon" href="../jiguo.ico">
 </head>
-<body>
+<body class="blog-index-page">
 
 <nav class="top-nav">
   <div class="primary-nav" aria-label="主导航">
@@ -18,7 +18,7 @@
   </div>
   <div class="language-switch" aria-label="语言切换">
     <span class="language-option active" aria-current="true">中文</span>
-    <a class="language-option" href="../index.html" hreflang="en">EN</a>
+    <span class="language-option unavailable" aria-disabled="true" aria-label="EN（英文博客暂未提供）" title="英文博客暂未提供">EN</span>
   </div>
 </nav>
 
@@ -27,23 +27,23 @@
     <div class="sidebar-header">
       <img src="../img/jiguo.png" alt="Jiguo Li" class="sidebar-photo">
       <h1 class="sidebar-name">Jiguo Li</h1>
-      <p class="sidebar-title">Senior Engineer @ MeiTuan</p>
+      <p class="sidebar-title">Senior Engineer @ Meituan</p>
       <div class="profile-links">
         <a href="https://github.com/smallflyingpig" class="profile-link">Github</a>
         <a href="https://scholar.google.com/citations?user=NfQeyQ4AAAAJ" class="profile-link">Scholar</a>
       </div>
     </div>
-    <div class="section-nav-title">Categories</div>
-    <ul class="section-nav" id="catFilter">
-      <li><a href="#" class="active" data-cat="all">All Posts</a></li>
-      <li><a href="#" data-cat="tech">Tech</a></li>
-      <li><a href="#" data-cat="essay">Essay</a></li>
-      <li><a href="#" data-cat="other">Other</a></li>
+    <div class="section-nav-title" id="categoryLabel">分类</div>
+    <ul class="section-nav" id="catFilter" aria-labelledby="categoryLabel">
+      <li><button type="button" class="active" data-cat="all" aria-pressed="true" disabled>全部分类</button></li>
+      <li><button type="button" data-cat="tech" aria-pressed="false" disabled>技术</button></li>
+      <li><button type="button" data-cat="essay" aria-pressed="false" disabled>随笔</button></li>
+      <li><button type="button" data-cat="other" aria-pressed="false" disabled>其他</button></li>
     </ul>
-    <div class="section-nav-title">Tags</div>
-    <div class="tag-cloud" id="tagFilter"></div>
-    <div class="section-nav-title">Archive</div>
-    <ul class="section-nav" id="yearFilter"></ul>
+    <div class="section-nav-title" id="tagLabel">标签</div>
+    <div class="tag-cloud" id="tagFilter" role="group" aria-labelledby="tagLabel"></div>
+    <div class="section-nav-title" id="archiveLabel">归档</div>
+    <ul class="section-nav" id="yearFilter" aria-labelledby="archiveLabel"></ul>
   </aside>
 
   <button class="sidebar-toggle" id="sidebarToggle" type="button"
@@ -53,92 +53,28 @@
 
   <div class="main-content-wrapper">
     <main class="main-content">
-      <h2 class="section-title" id="pageTitle">All Posts</h2>
-      <div class="blog-grid" id="blogGrid"></div>
-      <p class="no-results" id="noResults" style="display:none;text-align:center;color:#888;padding:30px;">No posts yet</p>
+      <div class="mobile-identity">
+        <img src="../img/jiguo.png" alt="" width="56" height="56">
+        <div>
+          <p class="mobile-identity-name">Jiguo Li</p>
+          <p class="mobile-identity-title">Senior Engineer @ Meituan</p>
+        </div>
+      </div>
+      <h1 class="section-title" id="pageTitle">博客</h1>
+      <p class="blog-intro">大语言模型、AI 论文与工程实践笔记。</p>
+      <div class="blog-toolbar">
+        <p id="postStatus" class="post-status" role="status" aria-live="polite" aria-atomic="true">正在加载文章…</p>
+        <button class="clear-filters" id="clearFilters" type="button" disabled>清除筛选</button>
+      </div>
+      <div class="blog-grid" id="blogGrid" aria-busy="true"></div>
+      <p class="no-results" id="noResults" hidden>没有符合当前筛选条件的文章。请清除筛选后重试。</p>
+      <button class="retry-load" id="retryLoad" type="button" hidden>重新加载</button>
+      <noscript><p class="no-results">请启用 JavaScript 以加载文章列表和筛选功能。</p></noscript>
     </main>
   </div>
 </div>
 
-<script>
-let posts=[], cat='all', tag=null, year=null;
-
-async function load() {
-  try {
-    const resp = await fetch('index.json');
-    posts = await resp.json();
-    render();
-  } catch(e) {
-    document.getElementById('noResults').style.display = 'block';
-    console.error('Failed to load posts:', e);
-  }
-}
-
-function render() {
-  const tags = {};
-  const years = {};
-  
-  posts.forEach(p => {
-    p.tags.forEach(t => tags[t] = (tags[t] || 0) + 1);
-    const y = p.date.split('-')[0];
-    years[y] = (years[y] || 0) + 1;
-  });
-  
-  document.getElementById('tagFilter').innerHTML = Object.entries(tags)
-    .sort((a,b) => b[1] - a[1])
-    .map(([t,c]) => `<span class="filter-tag${tag===t?' active':''}" data-tag="${t}">${t}(${c})</span>`)
-    .join('');
-  
-  document.getElementById('yearFilter').innerHTML = Object.entries(years)
-    .sort((a,b) => b[0] - a[0])
-    .map(([y,c]) => `<li><a href="#"${year===y?' class="active"':''} data-year="${y}">${y}(${c})</a></li>`)
-    .join('');
-  
-  let filtered = posts;
-  if (cat !== 'all') filtered = filtered.filter(p => p.category === cat);
-  if (tag) filtered = filtered.filter(p => p.tags.includes(tag));
-  if (year) filtered = filtered.filter(p => p.date.startsWith(year));
-  
-  document.getElementById('blogGrid').innerHTML = filtered.map(p => `
-    <div class="blog-card" onclick="location.href='posts/${p.slug}.html'">
-      <h3 class="blog-card-title">${p.title}</h3>
-      <div class="blog-card-meta">
-        <span class="blog-card-date">${p.date}</span>
-        <span class="blog-card-cat ${p.category}">${p.category}</span>
-      </div>
-      <div class="blog-card-tags">${p.tags.map(t => `<span class="tag-item">${t}</span>`).join('')}</div>
-      <p class="blog-card-excerpt">${p.excerpt}</p>
-    </div>
-  `).join('');
-  
-  document.getElementById('noResults').style.display = filtered.length ? 'none' : 'block';
-}
-
-document.getElementById('catFilter').addEventListener('click', e => {
-  if (e.target.dataset.cat) {
-    cat = e.target.dataset.cat;
-    document.querySelectorAll('#catFilter a').forEach(a => a.classList.remove('active'));
-    e.target.classList.add('active');
-    render();
-  }
-});
-
-document.getElementById('tagFilter').addEventListener('click', e => {
-  if (e.target.dataset.tag) {
-    tag = tag === e.target.dataset.tag ? null : e.target.dataset.tag;
-    render();
-  }
-});
-
-document.getElementById('yearFilter').addEventListener('click', e => {
-  if (e.target.dataset.year) {
-    year = year === e.target.dataset.year ? null : e.target.dataset.year;
-    render();
-  }
-});
-
-load();
-</script>
+<script src="../js/blog.js"></script>
 <script src="../js/sidebar.js"></script>
 
 </body>

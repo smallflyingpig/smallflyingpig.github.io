@@ -3,7 +3,7 @@ title: World Model：过去、现在和未来
 date: 2026-04-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: World Model（世界模型）是当前具身智能（Embodied AI）领域最受关注的技术路线之一。从 LeCun 提出 JEPA、OpenAI 用 Sora 定义"视频生成即世界模拟器"，到 DeepMind 用 Genie 生成可交互环境，这条路线在近三年快速演进。本文梳理 World Mod...
+excerpt: 梳理世界模型要解决的问题、主要技术路线与代表工作，比较潜在动力学、JEPA、扩散和自回归方法，并讨论规划与具身智能中的挑战。
 ---
 
 # World Model：过去、现在和未来

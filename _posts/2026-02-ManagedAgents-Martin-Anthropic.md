@@ -3,7 +3,7 @@ title: Scaling Managed Agents: Decoupling the Brain from the Hands
 date: 2026-02-01
 category: tech
 tags: [LLM, AI, Papers]
-excerpt: - **标题**: Scaling Managed Agents: Decoupling the Brain from the Hands - **作者**: Lance Martin, Gabe Cemaj, Michael Cohen - **机构**: Anthropic - **发表时间**...
+excerpt: 解读 Managed Agents 的“脑手分离”架构，梳理推理、执行与会话状态的解耦方式，以及接口设计、故障恢复和凭证隔离。
 ---
 
 # Scaling Managed Agents: Decoupling the Brain from the Hands
